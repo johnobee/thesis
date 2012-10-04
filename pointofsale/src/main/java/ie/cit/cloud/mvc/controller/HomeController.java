@@ -15,13 +15,19 @@
  */
 package ie.cit.cloud.mvc.controller;
 
+import ie.cit.cloud.mvc.model.ShoppingBasket;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.integration.MessageChannel;
+import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Handles requests for the application home page.
@@ -29,33 +35,26 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Controller
 public class HomeController {
 
-    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(HomeController.class);
 
-    @Autowired
-    AmqpTemplate amqpTemplate;
+	@Autowired
+	@Qualifier("toRabbit")
+	MessageChannel toRabbit;
 
-    /**
-     * Simply selects the home view to render by returning its name.
-     */
-    @RequestMapping(value="/")
-    public String home(Model model) {
-        return "redirect:registerbasket";
-    }
+	private MessagingTemplate tmpl = new MessagingTemplate();
 
-    
-    @RequestMapping(value="/registerbasket")
-    public String registerBasket(Model model) {
-        int count = 0;
-        while (count < 10) {
-        	 amqpTemplate.convertAndSend("si.test.queue", "Hello World:" + count + ": timestamp:");
-        	 count++;
-        };
-   
-        logger.info("Sending to SI quere using amqpTemplate");
-        return "basketResults";
+	@RequestMapping(value = "/")
+	public String home(Model model) {
+		return "redirect:registerbasket";
+	}
 
-    }
-    
-   
+	//  curl -i http://localhost:8080/basket/registerbasket
+	@RequestMapping(value = "/registerbasket")
+	@ResponseStatus(value = HttpStatus.OK)
+	public void registerBasket() {
+		for (int count = 0; count < 10; count++)
+			tmpl.convertAndSend(toRabbit, new ShoppingBasket("Basket 1", count));
+		logger.info("Sending to RabbitMQ exchange using SI outbound adapter");
+	}
 }
-
