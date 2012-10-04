@@ -15,26 +15,13 @@
  */
 package ie.cit.cloud.mvc.controller;
 
-import java.util.Collection;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import ie.cit.cloud.model.TwitterMessage;
-import ie.cit.cloud.service.TwitterService;
-
-
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
-
-
-
 
 /**
  * Handles requests for the application home page.
@@ -45,67 +32,26 @@ public class HomeController {
     private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
 
     @Autowired
-    private TwitterService twitterService;
+    AmqpTemplate amqpTemplate;
 
     /**
      * Simply selects the home view to render by returning its name.
      */
     @RequestMapping(value="/")
-    public String home(Model model, @RequestParam(required=false) String startTwitter,
-                                    @RequestParam(required=false) String stopTwitter) {
-
-        if (startTwitter != null) {
-            twitterService.startTwitterAdapter();
-            return "redirect:/";
-        }
-
-        if (stopTwitter != null) {
-            twitterService.stopTwitterAdapter();
-            return "redirect:/";
-        }
-
-        final Collection<TwitterMessage> twitterMessages = twitterService.getTwitterMessages();
-
-        logger.info("Retrieved {} Twitter messages.", twitterMessages.size());
-
-        model.addAttribute("twitterMessages", twitterMessages);
-
-        return "home";
+    public String home(Model model) {
+        return "redirect:registerbasket";
     }
 
-    /**
-     * Simply selects the home view to render by returning its name.
-     */
-    @RequestMapping(value="/ajax")
-    public String ajaxCall(Model model) {
-
-        final Collection<TwitterMessage> twitterMessages = twitterService.getTwitterMessages();
-
-        logger.info("Retrieved {} Twitter messages.", twitterMessages.size());
-        model.addAttribute("twitterMessages", twitterMessages);
-
-        return "twitterMessages";
-
-    }
     
     @RequestMapping(value="/registerbasket")
     public String registerBasket(Model model) {
-
-      
-        ApplicationContext context = new GenericXmlApplicationContext("META-INF/spring/integration/spring-integration-context.xml");
-        AmqpTemplate amqpTemplate = context.getBean(AmqpTemplate.class);
-        		
         int count = 0;
         while (count < 10) {
         	 amqpTemplate.convertAndSend("si.test.queue", "Hello World:" + count + ": timestamp:");
         	 count++;
         };
-    		
-       
    
         logger.info("Sending to SI quere using amqpTemplate");
-        //model.addAttribute("basketResults", twitterMessages);
-
         return "basketResults";
 
     }
