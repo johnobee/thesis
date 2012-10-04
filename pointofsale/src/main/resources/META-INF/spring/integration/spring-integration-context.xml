@@ -70,33 +70,53 @@
 
     <int-amqp:inbound-channel-adapter channel="fromRabbit" 
                                       queue-names="si.test.queue"
-                                      connection-factory="connectionFactory"
+                                      connection-factory="connectionFactory"/>
+                                    <!-- 
+                                    
                                       message-converter="jsonMessageConverter"/>
+         
+                                     -->
+                                     
+         
+    <int:logging-channel-adapter id="loggingChannelRabbit" level="INFO"
+                                 expression="'Id:' + payload.id + '; Date:' + payload.createdAt + '; FromUser: ' + payload.fromUser" />
                                       
    
     <int:channel id="fromRabbit">
-   <!--   //  <int:interceptors>
-            //<int:wire-tap channel="loggingChannel"/>
+       <int:interceptors>
+            <int:wire-tap channel="loggingChannelRabbit"/>
         </int:interceptors>
-    -->
+    
          
     </int:channel>
         
     <int-stream:stdout-channel-adapter id="consoleOut" channel="fromRabbit" append-newline="true"/>
     
  
-    <int:logging-channel-adapter id="loggingChannel" log-full-message="true" level="INFO"/>
+    <int:logging-channel-adapter id="loggingChannelRabbit" log-full-message="true" level="INFO"/>
 
     <!-- Infrastructure -->
+    
+    <!-- adapted from 
+    http://support.cloudfoundry.com/entries/21085401-rabbitmq-connecting-to-other-users-provisioned-services
+     
+      <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter"/>
+	
+	<rabbit:template connection-factory="rabbitConnectionFactory" message-converter="jsonMessageConverter" exchange="incidentExchange"/>
+     
+     -->
+ 
+ 
+  
+    <bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter"/>
+	
 
     <rabbit:connection-factory id="connectionFactory" />
 
-    <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
-
+    <rabbit:template id="amqpTemplate" connection-factory="connectionFactory" message-converter="jsonMessageConverter" />
+ 
     <rabbit:admin connection-factory="connectionFactory" />
     
-   
-
     <rabbit:queue name="si.test.queue" />
 
     <rabbit:direct-exchange name="si.test.exchange">
@@ -106,5 +126,6 @@
        
     </rabbit:direct-exchange>
     
+
 
 </beans>
