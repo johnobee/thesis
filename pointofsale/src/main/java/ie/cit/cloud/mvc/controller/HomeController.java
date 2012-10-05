@@ -15,26 +15,19 @@
  */
 package ie.cit.cloud.mvc.controller;
 
-import java.util.Collection;
+import ie.cit.cloud.mvc.model.ShoppingBasket;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
+import org.springframework.integration.MessageChannel;
+import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import ie.cit.cloud.model.TwitterMessage;
-import ie.cit.cloud.service.TwitterService;
-
-
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.support.GenericXmlApplicationContext;
-
-
-
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
  * Handles requests for the application home page.
@@ -42,74 +35,26 @@ import org.springframework.context.support.GenericXmlApplicationContext;
 @Controller
 public class HomeController {
 
-    private static final Logger logger = LoggerFactory.getLogger(HomeController.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(HomeController.class);
 
-    @Autowired
-    private TwitterService twitterService;
+	@Autowired
+	@Qualifier("toRabbit")
+	MessageChannel toRabbit;
 
-    /**
-     * Simply selects the home view to render by returning its name.
-     */
-    @RequestMapping(value="/")
-    public String home(Model model, @RequestParam(required=false) String startTwitter,
-                                    @RequestParam(required=false) String stopTwitter) {
+	private MessagingTemplate tmpl = new MessagingTemplate();
 
-        if (startTwitter != null) {
-            twitterService.startTwitterAdapter();
-            return "redirect:/";
-        }
+	@RequestMapping(value = "/")
+	public String home(Model model) {
+		return "redirect:registerbasket";
+	}
 
-        if (stopTwitter != null) {
-            twitterService.stopTwitterAdapter();
-            return "redirect:/";
-        }
-
-        final Collection<TwitterMessage> twitterMessages = twitterService.getTwitterMessages();
-
-        logger.info("Retrieved {} Twitter messages.", twitterMessages.size());
-
-        model.addAttribute("twitterMessages", twitterMessages);
-
-        return "home";
-    }
-
-    /**
-     * Simply selects the home view to render by returning its name.
-     */
-    @RequestMapping(value="/ajax")
-    public String ajaxCall(Model model) {
-
-        final Collection<TwitterMessage> twitterMessages = twitterService.getTwitterMessages();
-
-        logger.info("Retrieved {} Twitter messages.", twitterMessages.size());
-        model.addAttribute("twitterMessages", twitterMessages);
-
-        return "twitterMessages";
-
-    }
-    
-    @RequestMapping(value="/registerbasket")
-    public String registerBasket(Model model) {
-
-      
-        ApplicationContext context = new GenericXmlApplicationContext("META-INF/spring/integration/spring-integration-context.xml");
-        AmqpTemplate amqpTemplate = context.getBean(AmqpTemplate.class);
-        		
-        int count = 0;
-        while (count < 10) {
-        	 amqpTemplate.convertAndSend("si.test.queue", "Hello World:" + count + ": timestamp:");
-        	 count++;
-        };
-    		
-       
-   
-        logger.info("Sending to SI quere using amqpTemplate");
-        //model.addAttribute("basketResults", twitterMessages);
-
-        return "basketResults";
-
-    }
-    
-   
+	//  curl -i http://localhost:8080/basket/registerbasket
+	@RequestMapping(value = "/registerbasket")
+	@ResponseStatus(value = HttpStatus.OK)
+	public void registerBasket() {
+		for (int count = 0; count < 10; count++)
+			tmpl.convertAndSend(toRabbit, new ShoppingBasket("Basket 1", count));
+		logger.info("Sending to RabbitMQ exchange using SI outbound adapter");
+	}
 }
-
