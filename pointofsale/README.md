@@ -1,17 +1,15 @@
-Spring Integration - War Template
+Spring Integration AMQP & WS Point Of Sale Application
 ================================================================================
 
-This template is meant for running Spring Integration inside of an Servlet
-Container. This template by default uses Twitter Integration to show some basic
-functionality.
+The purpose of this project is provide a 2 REST controllers to handle POST http request that 
+simulate grocery shopping baskets.
+The intention is to demonstrate the sequential/transactional nature of a typical web service and
+the parrallel nature of a messaging service such as Rabbit AMQP
 
-Please keep in mind, that the provided Web UI is not necessary. You can in fact
-run Spring Integration processes without any MVC integration. Thus, you can
-run your Spring Integration components as mere backend processes.
+Basket.XML is a simple file which contains a sample transaciton header and can be posted to both REST controllers
+using the following CURL commands: 
 
 --------------------------------------------------------------------------------
+curl -X POST -H "Content-Type: application/xml" -d @basket.xml http://localhost/pointofsale/amqprest/basket
 
-For help please take a look at the Spring Integration documentation:
-
-http://www.springsource.org/spring-integration
-
+curl -X POST -H "Content-Type: application/xml" -d @basket.xml http://localhost/pointofsale/wsrest/basket

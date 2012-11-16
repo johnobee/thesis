@@ -27,7 +27,9 @@ import org.springframework.integration.MessageChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 /**
@@ -35,8 +37,8 @@ import org.springframework.web.bind.annotation.ResponseStatus;
  */
 
 
-
 @Controller
+@RequestMapping("amqprest")
 public class AMQPController {
 
 	private static final Logger logger = LoggerFactory
@@ -54,56 +56,16 @@ public class AMQPController {
 	}
 
 	//  curl -i http://localhost:8080/basket/registerbasket
-	@RequestMapping(value = "/basket")
+	@RequestMapping(value = "/basket", 
+					method = RequestMethod.POST, 
+					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasket() {
-		for (int count = 0; count < 1000; count++)
+	public void registerBasket(@RequestBody TransactionBasket transactionBasket){
+	//	for (int count = 0; count < 1000; count++)
 			
-			/*
-			 * 
-			 * 
-			 * 
-			 * 
-			 * 
-			 *					int transactionID;
-								long loyaltyCardID;
-								int	storeID;
-								String 	transctionDateTime;
-								int	totalTransactionAmount;
-								int	totalDiscountAmount;
-								int	totalItemLevelDiscount;
-								int	tillID;
-								int	cashierID;
-								int channelID;
-							1234567890+count,1234567890123456789L,12345,"21/01/2012",99999.9999,99999.9999,99999.9999,123,123,123));
 		
-							
-			The following example shows other ways you can use the underscore in numeric literals:
-
-				long creditCardNumber = 1234_5678_9012_3456L;
-				long socialSecurityNumber = 999_99_9999L;
-				float pi =  3.14_15F;
-				long hexBytes = 0xFF_EC_DE_5E;
-				long hexWords = 0xCAFE_BABE;
-				long maxLong = 0x7fff_ffff_ffff_ffffL;
-				byte nybbles = 0b0010_0101;
-				long bytes = 0b11010010_01101001_10010100_10010010;
-				You can place underscores only between digits; you cannot place underscores in the following places:
-
-				At the beginning or end of a number
-				Adjacent to a decimal point in a floating point literal
-				Prior to an F or L suffix
-				In positions where a string of digits is expected
-				
-				 */
-			//1234567890,1234567890123456789,12345,"23/01/2012",99999.99,99999.99,99999.99,12345,12345,12345
-			//tmpl.convertAndSend(toRabbit, count);
-			tmpl.convertAndSend(toRabbit, new TransactionBasket(1234567890+count,1234567890123456789L,12345,"21/01/2012",99999.9999,99999.9999,99999.9999,123,123,123));
-		
-	
-		
-		
-		
-		logger.info("Sending to RabbitMQ exchange using SI outbound adapter");
+		//	tmpl.convertAndSend(toRabbit, new TransactionBasket(1234567890+count,1234567890123456789L,12345,"21/01/2012",99999.9999,99999.9999,99999.9999,123,123,123));
+			tmpl.convertAndSend(toRabbit, transactionBasket);
+			logger.info("Sending to RabbitMQ exchange using SI outbound adapter");
 	}
 }

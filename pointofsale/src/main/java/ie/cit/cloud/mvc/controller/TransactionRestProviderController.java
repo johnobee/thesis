@@ -26,6 +26,7 @@ import javax.annotation.Resource;
  * PUT and DELETE will not.
  */
 @Controller
+@RequestMapping("wsrest")
 public class TransactionRestProviderController {
 
 	protected static Logger translogger = Logger.getLogger("controller");
@@ -65,7 +66,7 @@ public class TransactionRestProviderController {
     							method = RequestMethod.POST, 
     							headers="Accept=application/xml, application/json")
 	public @ResponseBody TransactionBasket addBasket(@RequestBody TransactionBasket transactionBasket) {
-    	translogger.debug("Provider has received request to add new person");
+    	translogger.debug("Provider has received request to add new basket");
     	
     	// Call service to here
     	return transactionService.add(transactionBasket);
