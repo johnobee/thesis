@@ -41,7 +41,7 @@ public class TransactionRestProviderController {
 								method = RequestMethod.GET, 
 								headers="Accept=application/xml, application/json")
 	public @ResponseBody TransactionBasketList getBasket() {
-		translogger.debug("Provider has received request to get all baskets");
+		translogger.info("Provider has received request to get all baskets");
 		
 		// Call service here
 		TransactionBasketList result = new TransactionBasketList();
@@ -56,7 +56,7 @@ public class TransactionRestProviderController {
     							method = RequestMethod.GET, 
     							headers="Accept=application/xml, application/json")
 	public @ResponseBody TransactionBasket getBasket(@PathVariable("id") int id) {
-    	translogger.debug("Provider has received request to get bakset with id: " + id);
+    	translogger.info("Provider has received request to get bakset with id: " + id);
     	
     	// Call service here
 		return transactionService.get(id);
@@ -66,7 +66,7 @@ public class TransactionRestProviderController {
     							method = RequestMethod.POST, 
     							headers="Accept=application/xml, application/json")
 	public @ResponseBody TransactionBasket addBasket(@RequestBody TransactionBasket transactionBasket) {
-    	translogger.debug("Provider has received request to add new basket");
+    	translogger.info("Provider has received request to add new basket");
     	
     	// Call service to here
     	return transactionService.add(transactionBasket);

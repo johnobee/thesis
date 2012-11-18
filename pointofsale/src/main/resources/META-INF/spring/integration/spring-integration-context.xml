@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:int="http://www.springframework.org/schema/integration"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:int="http://www.springframework.org/schema/integration"
 	xmlns:context="http://www.springframework.org/schema/context"
 	xmlns:int-amqp="http://www.springframework.org/schema/integration/amqp"
-	 xmlns:ws="http://www.springframework.org/schema/integration/ws"
+	xmlns:ws="http://www.springframework.org/schema/integration/ws"
 	xmlns:rabbit="http://www.springframework.org/schema/rabbit"
 	xmlns:int-stream="http://www.springframework.org/schema/integration/stream"
 	xsi:schemaLocation="http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
@@ -14,30 +15,38 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
-	<context:component-scan base-package="ie.cit.cloud.service" />
+	<context:component-scan base-package="ie.cit.cloud.mvc" />
 
 	<!-- infrastructure setup -->
 	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter" />
 	<rabbit:connection-factory id="connectionFactory" />
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory"	message-converter="jsonMessageConverter" />
 	<rabbit:admin connection-factory="connectionFactory" />
-	<rabbit:queue name="si.test.queue" />
+	<rabbit:queue name="si.test.queue1" />
+	<rabbit:queue name="si.test.queue2" />
+	<rabbit:queue name="si.test.queue3" />
+	<rabbit:queue name="si.test.queue4" />
 	<!-- setup exchange/queue infrastructure, simple binding without routing key -->
-	<rabbit:direct-exchange name="si.test.exchange">
+	<rabbit:fanout-exchange name="si.test.exchange.fanout">
 		<rabbit:bindings>
-			<rabbit:binding queue="si.test.queue"  />
+			<rabbit:binding queue="si.test.queue1"  />
+			<rabbit:binding queue="si.test.queue2"  />
+			<rabbit:binding queue="si.test.queue3"  />
 		</rabbit:bindings>
-	</rabbit:direct-exchange>
+	</rabbit:fanout-exchange>
 
 	<!-- sending messages -->
 	<int:channel id="toRabbit" />
- 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate" exchange-name="si.test.exchange" channel="toRabbit"/>
+ 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate" exchange-name="si.test.exchange.fanout" channel="toRabbit"/>
 		
 	<!-- receiving messages from queue -->
 	<int:channel id="fromRabbit"/>
-	<int-amqp:inbound-channel-adapter channel="fromRabbit" queue-names="si.test.queue" connection-factory="connectionFactory" />
+	<int-amqp:inbound-channel-adapter channel="fromRabbit" queue-names="si.test.queue1,si.test.queue2,si.test.queue3" connection-factory="connectionFactory" />
+	<int:service-activator input-channel="fromRabbit" ref="amqpServiceActivator" method="amqpServiceActivatorMethod"/>
+	
 	<int-stream:stdout-channel-adapter	id="consoleOut" channel="fromRabbit" append-newline="true" />
 
 	<!-- Setup of Web Service through Spring Integration -->
+	
 	
 </beans>

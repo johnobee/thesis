@@ -19,7 +19,7 @@
 
     <!-- Enables the Spring MVC @Controller programming model -->
     <mvc:annotation-driven />
-	<mvc:default-servlet-handler/>
+<!--  	<mvc:default-servlet-handler/>-->
 
   
 </beans>

@@ -10,6 +10,6 @@ Basket.XML is a simple file which contains a sample transaciton header and can b
 using the following CURL commands: 
 
 --------------------------------------------------------------------------------
-curl -X POST -H "Content-Type: application/xml" -d @basket.xml http://localhost/pointofsale/amqprest/basket
+curl -X POST -H "Content-Type: application/json" -d @basket.json http://localhost/pointofsale/amqprest/basket
 
 curl -X POST -H "Content-Type: application/xml" -d @basket.xml http://localhost/pointofsale/wsrest/basket
