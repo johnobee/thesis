@@ -32,6 +32,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
+import ie.cit.cloud.mvc.model.testBasket;
+
 /**
  * Handles requests for the application home page.
  */
@@ -47,7 +49,7 @@ public class AMQPController {
 	@Autowired
 	@Qualifier("toRabbit")
 	MessageChannel toRabbit;
-
+	
 	private MessagingTemplate tmpl = new MessagingTemplate();
 
 	@RequestMapping(value = "/")
@@ -60,8 +62,10 @@ public class AMQPController {
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasket(@RequestBody TransactionBasket transactionBasket){
+//	public void registerBasket(@RequestBody TransactionBasket transactionBasket){
 	//	for (int count = 0; count < 1000; count++)
+	
+	public void registerBasket(@RequestBody TransactionBasket transactionBasket){
 			
 		
 		//	tmpl.convertAndSend(toRabbit, new TransactionBasket(1234567890+count,1234567890123456789L,12345,"21/01/2012",99999.9999,99999.9999,99999.9999,123,123,123));

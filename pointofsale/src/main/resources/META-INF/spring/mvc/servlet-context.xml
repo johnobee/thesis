@@ -13,13 +13,13 @@
     <!-- Scans within the base package of the application for @Components to configure as beans -->
     <context:component-scan base-package="ie.cit.cloud.mvc" />
 
-<!--     <mvc:default-servlet-handler /> -->
+
 
     <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+<!--     <mvc:default-servlet-handler /> -->
+
 
     <!-- Enables the Spring MVC @Controller programming model -->
     <mvc:annotation-driven />
-<!--  	<mvc:default-servlet-handler/>-->
-
   
 </beans>
