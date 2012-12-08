@@ -39,23 +39,39 @@
 			<rabbit:binding queue="si.test.queue3"  />
 		</rabbit:bindings>
 	</rabbit:fanout-exchange>
-
+	<int:annotation-config/>
+	
 	<!-- sending messages -->
 	<int:channel id="toRabbit" />
- 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate" exchange-name="si.test.exchange.fanout" channel="toRabbit"/>
+ 	<int-amqp:outbound-channel-adapter 
+ 	amqp-template="amqpTemplate" 
+ 	exchange-name="si.test.exchange.fanout" 
+ 	channel="toRabbit"
+ 	mapped-request-headers="foo*"
+ 	/>
 		
 	<!-- receiving messages from queue -->
 	<int:channel id="fromRabbit"/>
-	<int-amqp:inbound-channel-adapter channel="fromRabbit" queue-names="si.test.queue1,si.test.queue2,si.test.queue3" connection-factory="connectionFactory" />
+	
+	<int-amqp:inbound-channel-adapter 
+	channel="fromRabbit" 
+	queue-names="si.test.queue1" 
+	connection-factory="connectionFactory"   
+	mapped-request-headers="foo*"
+	
+	/>
 	<int:service-activator input-channel="fromRabbit" ref="amqpServiceActivator" method="amqpServiceActivatorMethod"/>
 	
-	<int-stream:stdout-channel-adapter	id="consoleOut" channel="fromRabbit" append-newline="true" />
-
+	<!-- <int-stream:stdout-channel-adapter	id="consoleOut" channel="fromRabbit" append-newline="true" />
+ -->
 	<!-- Setup of Web Service through Spring Integration -->
 	
-	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud" />
+		<!-- access web service using spring integration -->
+		
+	<!-- <oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud" />
+	
 
-	<!-- access web service using spring integration -->
+
 	<int:channel id="input" />
 	<int:channel id="output" />
 	
@@ -73,5 +89,5 @@
 		uri="http://localhost:8080/ws-sample/baskets" 
 	/>
 	
-	
+	 -->
 </beans>

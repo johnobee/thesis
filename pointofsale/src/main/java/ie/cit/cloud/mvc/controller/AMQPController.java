@@ -23,8 +23,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.integration.Message;
 import org.springframework.integration.MessageChannel;
 import org.springframework.integration.core.MessagingTemplate;
+import org.springframework.integration.support.MessageBuilder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -67,9 +69,21 @@ public class AMQPController {
 	
 	public void registerBasket(@RequestBody TransactionBasket transactionBasket){
 			
-		
+		Message<TransactionBasket> message1 = MessageBuilder.withPayload(transactionBasket)
+		        .setHeader("foo", "bar")
+		        .build();
 		//	tmpl.convertAndSend(toRabbit, new TransactionBasket(1234567890+count,1234567890123456789L,12345,"21/01/2012",99999.9999,99999.9999,99999.9999,123,123,123));
-			tmpl.convertAndSend(toRabbit, transactionBasket);
-			logger.info("Sending to RabbitMQ exchange using SI outbound adapter");
+		//	tmpl.convertAndSend(toRabbit, transactionBasket);
+			
+		logger.info("************************************");
+		logger.info("ABOUT TO SEND FROM AMQP CONTROLLER");
+		logger.info("************************************");
+			tmpl.convertAndSend(toRabbit, message1);
+			
+			
+			logger.info("************************************");
+			logger.info("BACK TO THE AMQP CONTROLLER");
+			logger.info("************************************");
+			
 	}
 }

@@ -42,9 +42,9 @@ public class WSRestProviderController {
 	@Resource(name="transactionService")
 	private TransactionService transactionService;
 	
-	@Autowired
-	@Qualifier("input")
-	MessageChannel input;
+	//@Autowired
+	//@Qualifier("input")
+	//MessageChannel input;
 	
 	
 	//http://localhost:8080/wsrest/baskets
@@ -81,7 +81,7 @@ public class WSRestProviderController {
 	public @ResponseBody TransactionBasket addBasket(@RequestBody TransactionBasket transactionBasket) {
     	translogger.info("Provider has received request to add new basket");
 
-    	tmpl.convertAndSend(input, transactionBasket);
+    	//tmpl.convertAndSend(input, transactionBasket);
     	translogger.info("Sending to web service with exchange using SI outbound adapter");
     	
     	// Call service to here
