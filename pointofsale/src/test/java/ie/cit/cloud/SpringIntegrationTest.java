@@ -24,7 +24,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class SpringIntegrationTest {
 
-    @Test
+    @SuppressWarnings("unused")
+	@Test
     public void testSpringIntegrationContextStartup() throws Exception{
 
         final ApplicationContext context = new ClassPathXmlApplicationContext("/META-INF/spring/integration/spring-integration-context.xml", SpringIntegrationTest.class);

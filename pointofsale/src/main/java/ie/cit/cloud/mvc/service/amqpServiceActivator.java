@@ -1,8 +1,6 @@
 package ie.cit.cloud.mvc.service;
 
 import org.apache.log4j.Logger;
-import org.springframework.stereotype.Service;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.integration.MessageChannel;
