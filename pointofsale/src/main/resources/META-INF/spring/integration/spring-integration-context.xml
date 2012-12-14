@@ -160,18 +160,19 @@
 		append-newline="true" 
 	/>
 
-<!-- 
+
+
 	<int:header-enricher input-channel="input" output-channel="output">
-		<int:error-channel ref="output"/>
-		<int:reply-channel ref="output"/>
+		<int:header name="uri" value="123"/>
 	</int:header-enricher>
- -->
+ 
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
 		uri="http://localhost:8080/{message_service}/baskets" 
 		marshaller="marshaller"
 		unmarshaller="marshaller" 
+		mapped-request-headers="uri*"
 		>
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>

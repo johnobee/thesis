@@ -3,6 +3,32 @@
 	targetNamespace="http://cloud.cit.ie/loyalty" xmlns:r="http://cloud.cit.ie/loyalty"
 	elementFormDefault="qualified">
 
+<xs:element name="salesTransactionRequest">
+  <xs:complexType>
+    <xs:sequence>
+      <xs:element name="totalValue" type="xs:decimal"/>
+      <xs:element name="storeID" type="xs:integer"/>
+      <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="product" type="xs:string"/>
+            <xs:element name="quantity" type="xs:positiveInteger"/>
+            <xs:element name="price" type="xs:decimal"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+    <xs:attribute name="transactionID" type="xs:string" use="required"/>
+  </xs:complexType>
+</xs:element>
+
+	<xs:element name="salesTransactionResponse">
+		<xs:complexType>
+			<xs:attribute name="confirmationNumber" type="xs:string" />
+			<xs:attribute name="transactionNumber" type="xs:string" />
+		</xs:complexType>
+	</xs:element>
+
 
 	<xs:element name="loyaltyRequest">
 		<xs:complexType>
