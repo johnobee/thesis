@@ -1,4 +1,4 @@
-package ie.cit.cloud.mvc.service;
+package ie.cit.cloud.mvc.service.amqp;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;

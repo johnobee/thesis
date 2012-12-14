@@ -24,12 +24,12 @@
 
 
 
-	<context:component-scan base-package="ie.cit.cloud.mvc" />
+	<context:component-scan base-package="ie.cit.cloud" />
 
 	<!-- infrastructure setup -->
 	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter" />
-	<rabbit:connection-factory id="connectionFactory" />
 	
+	<rabbit:connection-factory id="connectionFactory" />
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" message-converter="jsonMessageConverter" />
 	<rabbit:admin connection-factory="connectionFactory" />
 	<rabbit:queue name="si.test.queue1" />
@@ -147,9 +147,9 @@
 		<!-- access web service using spring integration -->
 		
 		
-		<!-- Need to work this section out as need to wite the JAXB elements to the 
-		CloudFoundry Webservices 
-	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud" /> 
+		<!-- Need to work this section out as need to write the JAXB elements to the 
+		CloudFoundry Webservices -->
+	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud.pointofsale" /> 
 
 	<int:channel id="input" />
 	<int:channel id="output" />
@@ -160,18 +160,22 @@
 		append-newline="true" 
 	/>
 
-
-
+<!-- 
+	<int:header-enricher input-channel="input" output-channel="output">
+		<int:error-channel ref="output"/>
+		<int:reply-channel ref="output"/>
+	</int:header-enricher>
+ -->
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
-		uri="http://{message_service}.cloudfoundy.com:8080/baskets" 
+		uri="http://localhost:8080/{message_service}/baskets" 
 		marshaller="marshaller"
 		unmarshaller="marshaller" 
 		>
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
-	 -->
+	 
 	
 	
 </beans>

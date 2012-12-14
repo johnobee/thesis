@@ -17,6 +17,7 @@ package ie.cit.cloud.mvc.controller;
 
 
 import ie.cit.cloud.mvc.model.TransactionBasket;
+import ie.cit.cloud.pointofsale.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,6 +48,10 @@ public class BasketController {
 			.getLogger(BasketController.class);
 
 	@Autowired
+	@Qualifier("input")
+	MessageChannel input;
+	
+	@Autowired
 	@Qualifier("toRabbit")
 	MessageChannel toRabbit;
 	
@@ -74,7 +79,7 @@ public class BasketController {
 			
 			
 			tmpl.convertAndSend(toRabbit, message);
-			
+		
 			
 			logger.info("************************************");
 			logger.info("BACK TO THE AMQP CONTROLLER");
@@ -92,25 +97,24 @@ public class BasketController {
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasketWS(@RequestBody TransactionBasket transactionBasket, 
+	public void registerBasketWS(@RequestBody SalesTransactionRequest transactionBasket, 
 			@PathVariable("resource") String resource)
 	{
 			
-		Message<TransactionBasket> message = MessageBuilder.withPayload(transactionBasket)
+		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", resource)
-		        .build();
+		       // .setHeader("uri", "http://cloud.cit.ie/pointofsale")	
+		        .setHeaderIfAbsent("uri", "http://cloud.cit.ie/pointofsale")
+				.build();
 		
-				
 			logger.info("************************************");
 			logger.info("ABOUT TO SEND FROM WS CONTROLLER");
 			logger.info("************************************");
 			
 			
-			//tmpl.convertAndSend(toRabbit, message);
-			
-			tmpl.convertAndSend(toRabbit, message);
-			
+			//tmpl.convertAndSend(input, message); 
+			tmpl.convertSendAndReceive(input, message);
 			
 			logger.info("************************************");
 			logger.info("BACK TO THE WS CONTROLLER");
