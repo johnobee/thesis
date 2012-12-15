@@ -66,9 +66,11 @@ public class BasketController {
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasketAMQP(@RequestBody TransactionBasket transactionBasket){
-			
-		Message<TransactionBasket> message = MessageBuilder.withPayload(transactionBasket)
+	
+	//public void registerBasketAMQP(@RequestBody TransactionBasket transactionBasket){
+	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket){
+				
+		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "AMQP")
 		       // .setHeader("message_service", "AMQP")
 		        .build();
@@ -104,9 +106,7 @@ public class BasketController {
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", resource)
-		       // .setHeader("uri", "http://cloud.cit.ie/pointofsale")	
-		        .setHeaderIfAbsent("uri", "http://cloud.cit.ie/pointofsale")
-				.build();
+		       .build();
 		
 			logger.info("************************************");
 			logger.info("ABOUT TO SEND FROM WS CONTROLLER");
@@ -114,7 +114,7 @@ public class BasketController {
 			
 			
 			//tmpl.convertAndSend(input, message); 
-			tmpl.convertSendAndReceive(input, message);
+			tmpl.convertAndSend(input, message);//(input, message);
 			
 			logger.info("************************************");
 			logger.info("BACK TO THE WS CONTROLLER");

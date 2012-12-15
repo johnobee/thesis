@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://cloud.cit.ie/loyalty" xmlns:r="http://cloud.cit.ie/loyalty"
+	targetNamespace="http://cloud.cit.ie/pointofsale123" xmlns:r="http://cloud.cit.ie/pointofsale456"
 	elementFormDefault="qualified">
 
+	
 <xs:element name="salesTransactionRequest">
   <xs:complexType>
     <xs:sequence>
       <xs:element name="totalValue" type="xs:decimal"/>
       <xs:element name="storeID" type="xs:integer"/>
+      <xs:element name="transactionID" type="xs:string"/>
       <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
@@ -18,7 +20,7 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="transactionID" type="xs:string" use="required"/>
+
   </xs:complexType>
 </xs:element>
 
@@ -48,6 +50,27 @@
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="loyaltyNumber" type="xs:string" />
 			<xs:attribute name="loyaltyValue" type="xs:decimal" />
+		</xs:complexType>
+	</xs:element>
+	
+	<xs:element name="creditcardRequest">
+		<xs:complexType>
+			<xs:sequence minOccurs="0" maxOccurs="unbounded">
+				<xs:element name="productCode" type="xs:integer" />
+				<xs:element name="productQuantity" type="xs:integer" />
+				<xs:element name="productDiscount" type="xs:decimal" />
+			</xs:sequence>
+			<xs:attribute name="basketAmount" use="required" type="xs:decimal" />
+			<xs:attribute name="loyaltyCard" use="required" type="xs:decimal" />
+			<xs:attribute name="transactionID" use="required" type="xs:decimal" />
+		</xs:complexType>
+	</xs:element>		
+
+	<xs:element name="creditcardResponse">
+		<xs:complexType>
+			<xs:attribute name="confirmationNumber" type="xs:string" />
+			<xs:attribute name="creditcardNumber" type="xs:string" />
+			<xs:attribute name="creditcardValue" type="xs:decimal" />
 		</xs:complexType>
 	</xs:element>
  

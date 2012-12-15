@@ -24,7 +24,7 @@
 
 
 
-	<context:component-scan base-package="ie.cit.cloud" />
+	<context:component-scan base-package="ie.cit.cloud.mvc" />
 
 	<!-- infrastructure setup -->
 	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter" />
@@ -162,10 +162,6 @@
 
 
 
-	<int:header-enricher input-channel="input" output-channel="output">
-		<int:header name="uri" value="123"/>
-	</int:header-enricher>
- 
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 

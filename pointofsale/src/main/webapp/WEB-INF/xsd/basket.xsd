@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://cloud.cit.ie/pointofsale" xmlns:r="http://cloud.cit.ie/pointofsale"
+	targetNamespace="http://cloud.cit.ie/pointofsale789" xmlns:r="http://cloud.cit.ie/pointofsale237"
 	elementFormDefault="qualified">
-	
+
 	
 <xs:element name="salesTransactionRequest">
   <xs:complexType>
     <xs:sequence>
       <xs:element name="totalValue" type="xs:decimal"/>
       <xs:element name="storeID" type="xs:integer"/>
+      <xs:element name="transactionID" type="xs:string"/>
       <xs:element name="item" minOccurs="0" maxOccurs="unbounded">
         <xs:complexType>
           <xs:sequence>
@@ -19,7 +20,6 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-    <xs:attribute name="transactionID" type="xs:string" use="required"/>
   </xs:complexType>
 </xs:element>
 

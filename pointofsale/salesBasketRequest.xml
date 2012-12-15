@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<salesTransactionRequest 
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:schemaLocation="http://cloud.cit.ie/pointofsale basket.xsd"
+targetNamespace="http://cloud.cit.ie/pointofsale">
+  <totalValue>22.50</totalValue>
+  <storeID>12345</storeID>
+   <item>
+    <product>123456A</product>
+    <quantity>1</quantity>
+    <price>10.90</price>
+  </item>
+</salesTransactionRequest>
+

@@ -1,6 +1,7 @@
 package ie.cit.cloud.service;
-import ie.cit.cloud.loyalty.LoyaltyRequest;
-import ie.cit.cloud.loyalty.LoyaltyResponse;
+import ie.cit.cloud.pointofsale.LoyaltyRequest;
+import ie.cit.cloud.pointofsale.SalesTransactionRequest;
+import ie.cit.cloud.pointofsale.LoyaltyResponse;
 
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
@@ -10,11 +11,11 @@ import org.springframework.ws.server.endpoint.annotation.ResponsePayload;
 @Endpoint
 public class LoyaltyEndpoint {
 
-	private static final String NAMESPACE_URI = "http://cloud.cit.ie/loyalty";
+	private static final String NAMESPACE_URI = "http://cloud.cit.ie/pointofsale";
 
-	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "promotionRequest")
+	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "salesTransactionRequest")
 	@ResponsePayload
-	public LoyaltyResponse loyaltyAvailableResponse(@RequestPayload LoyaltyRequest request) {
+	public LoyaltyResponse loyaltyAvailableResponse(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);
 		return new LoyaltyResponse();
 	}
