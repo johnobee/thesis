@@ -160,8 +160,8 @@
 		append-newline="true" 
 	/>
 
-
-
+<!--  ****** LOCAL CONFIG ***** -->
+<!--  
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
@@ -172,7 +172,18 @@
 		>
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
-	 
+-->	 
+<!--  ****** Cloudfoundry Config CONFIG ***** -->
+	<int-ws:outbound-gateway id="marshallingGateway"
+		request-channel="input"
+		reply-channel="output" 
+		uri="http://{message_service}.cloudfoundry.com/{message_service}/baskets" 
+		marshaller="marshaller"
+		unmarshaller="marshaller" 
+		mapped-request-headers="uri*"
+		>
+		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
+		</int-ws:outbound-gateway>
 	
 	
 </beans>

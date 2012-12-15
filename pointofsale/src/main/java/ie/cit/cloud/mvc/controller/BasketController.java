@@ -106,7 +106,7 @@ public class BasketController {
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", resource)
-		       .build();
+		        .build();
 		
 			logger.info("************************************");
 			logger.info("ABOUT TO SEND FROM WS CONTROLLER");

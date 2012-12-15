@@ -10,7 +10,7 @@
 
 
 	<web-services:dynamic-wsdl id="baskets"
-		portTypeName="promotion" locationUri="http://localhost:8080/promotion/baskets">
+		portTypeName="Pointofsale" locationUri="http://localhost:8080/promotion/baskets">
 		<web-services:xsd location="/WEB-INF/xsd/basket.xsd" />
 	</web-services:dynamic-wsdl>
 

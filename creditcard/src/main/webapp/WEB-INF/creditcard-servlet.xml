@@ -8,9 +8,17 @@
 		http://www.springframework.org/schema/web-services http://www.springframework.org/schema/web-services/web-services.xsd">
 
 
-
+<!--  *** LOCAL CONFIG -->
+<!-- 
 	<web-services:dynamic-wsdl id="baskets"
-		portTypeName="creditcard" locationUri="http://localhost:8080/creditcard/baskets">
+		portTypeName="Pointofsale" locationUri="http://localhost:8080/creditcard/baskets">
+		<web-services:xsd location="/WEB-INF/xsd/basket.xsd" />
+	</web-services:dynamic-wsdl>
+-->
+	
+	<!--  *** CLOUDFOUNDRY CONFIG -->
+	<web-services:dynamic-wsdl id="baskets"
+		portTypeName="Pointofsale" locationUri="http://creditcard.cloudfoundry.com/creditcard/baskets">
 		<web-services:xsd location="/WEB-INF/xsd/basket.xsd" />
 	</web-services:dynamic-wsdl>
 

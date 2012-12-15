@@ -8,12 +8,24 @@
 		http://www.springframework.org/schema/web-services http://www.springframework.org/schema/web-services/web-services.xsd">
 
 
+<!-- *** LOCAL CONFIG *** -->
+<!-- 
 
 	<web-services:dynamic-wsdl id="baskets"
-		portTypeName="voucher" locationUri="http://localhost:8080/voucher/baskets">
+		portTypeName="PointofSale" locationUri="http://localhost:8080/voucher/baskets">
 		<web-services:xsd location="/WEB-INF/xsd/basket.xsd" />
 	</web-services:dynamic-wsdl>
+ -->
+ 
+ <!-- *** CLOUDFOUNDRY CONFIG *** -->
 
+
+	<web-services:dynamic-wsdl id="baskets"
+		portTypeName="PointofSale" locationUri="http://voucher.cloudfoundry.com/voucher/baskets">
+		<web-services:xsd location="/WEB-INF/xsd/basket.xsd" />
+	</web-services:dynamic-wsdl>
+ 
+ 
 	<web-services:annotation-driven />
 	<context:component-scan base-package="ie.cit.cloud" />
 </beans>

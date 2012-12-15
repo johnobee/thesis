@@ -1,7 +1,7 @@
 package ie.cit.cloud.service;
-import ie.cit.cloud.pointofsale.LoyaltyRequest;
 import ie.cit.cloud.pointofsale.SalesTransactionRequest;
 import ie.cit.cloud.pointofsale.LoyaltyResponse;
+
 
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
