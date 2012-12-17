@@ -34,6 +34,22 @@
 	</build>
 
 	<dependencies>
+
+
+
+<!-- we'll use JSTL in jsp pages -->
+		<dependency>
+			<groupId>jstl</groupId>
+			<artifactId>jstl</artifactId>
+			<version>1.2</version>
+		</dependency>
+
+	<!-- Cloud Foundry dependency -->
+		<dependency>
+			<groupId>org.cloudfoundry</groupId>
+			<artifactId>cloudfoundry-runtime</artifactId>
+			<version>0.8.1</version>
+		</dependency>
 		<!-- Testing -->
 		<dependency>
 			<groupId>junit</groupId>
@@ -104,12 +120,21 @@
 			<version>2.1.1.RELEASE</version>
 		</dependency>
 		
-		<!-- MySQL DB for Logging Reponse and process time to make querying a little easier -->
+		<!-- MySQL DB for Logging Reponse and process time to make querying a little easier 
 	    	<dependency>
 				<groupId>mysql</groupId>
 				<artifactId>mysql-connector-java</artifactId>
 				<version>5.1.9</version>
 				<scope>runtime</scope>
+		</dependency>
+		-->
+		<!-- PostGre DB for Logging Reponse and process time to make querying a little easier -->
+	    
+		<dependency>
+			    <groupId>postgresql</groupId>
+			    <artifactId>postgresql</artifactId>
+			    <version>9.0-801.jdbc4</version>
+			    
 		</dependency>
 		
 		<!-- Logging -->

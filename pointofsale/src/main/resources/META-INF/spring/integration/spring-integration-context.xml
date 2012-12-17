@@ -36,6 +36,7 @@
 	<rabbit:queue name="si.test.queue2" />
 	<rabbit:queue name="si.test.queue3" />
 	<rabbit:queue name="si.test.queue4" />
+	
 	<!-- setup exchange/queue infrastructure, simple binding without routing key -->
 	<rabbit:fanout-exchange name="si.test.exchange.fanout">
 		<rabbit:bindings>
@@ -48,13 +49,10 @@
 	
 	<!-- sending messages -->
 	<int:channel id="toRabbit" />
- 	<int-amqp:outbound-channel-adapter 
- 	amqp-template="amqpTemplate" 
- 	exchange-name="si.test.exchange.fanout" 
- 	channel="toRabbit"
- 	mapped-request-headers="message_source,message_service"
- 	/>
-		
+	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
+		exchange-name="si.test.exchange.fanout" channel="toRabbit"
+		mapped-request-headers="message_source,message_service" />
+
 	<!-- receiving messages from queue -->
 	<int:channel id="fromRabbit"/>
 	
@@ -108,14 +106,16 @@
 	<!-- Configure a SI outbound adpater to log each message time 
 		Should be able to configure this to 
 	-->
+
 	
-	<int-jdbc:outbound-channel-adapter
+	<int-jdbc:outbound-channel-adapter id="jdbc-outboundChannelAdapter"
     query="insert into lot_lu_loadtest_logger (
     lo_message_start_time, 
     lo_message_end_time, 
     lo_message_channel, 
-    lo_message_service)	
-    values (1,1,:headers[message_source], :headers[message_service])"
+    lo_message_service,
+    lo_message_timestamp)
+    values (:headers[timestamp],1,:headers[message_source], :headers[message_service], now())"
     data-source="dataSource"
     channel="fromRabbit"/>
     
@@ -130,8 +130,8 @@
 <!-- *********************************** 
 		SET OF Consoler Out Adapter for testing etc
 	*******************************  --> 
-		<!--   <int-stream:stdout-channel-adapter	id="consoleOut" channel="fromRabbit" append-newline="true" />
- -->
+  <int-stream:stdout-channel-adapter id="consoleOutTest" channel="fromRabbit" append-newline="true" />
+
  <!-- *********************************** 
 		End of Console-Out Adapter for testing etc 
 	***********************************  --> 
@@ -161,29 +161,27 @@
 	/>
 
 <!--  ****** LOCAL CONFIG ***** -->
-<!--  
+  
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
 		uri="http://localhost:8080/{message_service}/baskets" 
 		marshaller="marshaller"
-		unmarshaller="marshaller" 
-		mapped-request-headers="uri*"
-		>
+		unmarshaller="marshaller">
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
-		</int-ws:outbound-gateway>
--->	 
+	</int-ws:outbound-gateway>
+
 <!--  ****** Cloudfoundry Config CONFIG ***** -->
+<!-- 
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
 		uri="http://{message_service}.cloudfoundry.com/{message_service}/baskets" 
 		marshaller="marshaller"
-		unmarshaller="marshaller" 
-		mapped-request-headers="uri*"
+		unmarshaller="marshaller"
 		>
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
-	
-	
+  -->
+
 </beans>

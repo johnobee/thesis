@@ -15,8 +15,8 @@
  */
 package ie.cit.cloud.mvc.controller;
 
+import java.util.List;
 
-import ie.cit.cloud.mvc.model.TransactionBasket;
 import ie.cit.cloud.pointofsale.*;
 
 import org.slf4j.Logger;
@@ -29,13 +29,16 @@ import org.springframework.integration.MessageChannel;
 import org.springframework.integration.core.MessagingTemplate;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
-
+import javax.annotation.Resource;
+import ie.cit.cloud.mvc.model.LogEntry;
+import ie.cit.cloud.mvc.service.jdbc.LogEntryService;
 /**
  * Handles requests for the application home page.
  */
@@ -55,8 +58,41 @@ public class BasketController {
 	@Qualifier("toRabbit")
 	MessageChannel toRabbit;
 	
-	private MessagingTemplate tmpl = new MessagingTemplate();
 
+	
+	private MessagingTemplate tmpl = new MessagingTemplate();
+	
+
+	
+	 @Resource(name="logEntryService")
+	 private LogEntryService logEntryService;
+	  
+	 /**
+	  * Handles and retrieves all persons and show it in a JSP page
+	  * 
+	  * @return the name of the JSP page
+	  */
+	    @RequestMapping(value = "/log", method = RequestMethod.GET)
+	    public String getLogEntries(Model model) {
+	      
+	     logger.debug("Received request to show all log entries");
+	      
+	     // Retrieve all persons by delegating the call to PersonService
+	     List<LogEntry> logentries = logEntryService.getAll();
+	      
+	     // Attach persons to the Model
+	     model.addAttribute("logentries", logentries);
+	      
+	     // This will resolve to /WEB-INF/jsp/logpage.jsp
+	     return "logpage";
+	 }
+	  
+
+	
+		
+	
+	
+	
 	/* 
 	 * 	AMQP Controller Elements
 	 */
@@ -66,13 +102,10 @@ public class BasketController {
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	
-	//public void registerBasketAMQP(@RequestBody TransactionBasket transactionBasket){
 	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket){
-				
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "AMQP")
-		       // .setHeader("message_service", "AMQP")
+		        .setHeader("message_service", "AMQP")
 		        .build();
 		
 			logger.info("************************************");
