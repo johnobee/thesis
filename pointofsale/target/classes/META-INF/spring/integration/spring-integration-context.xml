@@ -10,6 +10,9 @@
 	xmlns:oxm="http://www.springframework.org/schema/oxm"
 	xmlns:int-jdbc="http://www.springframework.org/schema/integration/jdbc"
 	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:cloud="http://schema.cloudfoundry.org/spring"
+	xmlns:int-event="http://www.springframework.org/schema/integration/event"
 	xsi:schemaLocation="http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-2.1.xsd
 		http://www.springframework.org/schema/integration/ws http://www.springframework.org/schema/integration/ws/spring-integration-ws.xsd
@@ -19,16 +22,17 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
 		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.0.xsd
 	    http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd
-	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd">
+	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
+	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	    http://schema.cloudfoundry.org/spring http://schema.cloudfoundry.org/spring/cloudfoundry-spring.xsd
+	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.1.xsd">
 	    
-
-
 
 	<context:component-scan base-package="ie.cit.cloud.mvc" />
 
 	<!-- infrastructure setup -->
 	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter" />
-	
+
 	<rabbit:connection-factory id="connectionFactory" />
 	<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" message-converter="jsonMessageConverter" />
 	<rabbit:admin connection-factory="connectionFactory" />
@@ -45,37 +49,48 @@
 			<rabbit:binding queue="si.test.queue3"  />
 		</rabbit:bindings>
 	</rabbit:fanout-exchange>
+	
+	<rabbit:direct-exchange name="logExchnge">
+			<rabbit:bindings>
+				<rabbit:binding queue="si.test.queue4" />
+			</rabbit:bindings>
+	</rabbit:direct-exchange>
+	
 	<int:annotation-config/>
 	
 	<!-- sending messages -->
 	<int:channel id="toRabbit" />
 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
 		exchange-name="si.test.exchange.fanout" channel="toRabbit"
-		mapped-request-headers="message_source,message_service" />
+		mapped-request-headers="message_*" />
+		
+	<!-- sending messages -->
+	<int:channel id="toLogChannel" />
+	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
+		exchange-name="logExchnge" channel="toLogChannel"
+		mapped-request-headers="message_*" />
+		
 
 	<!-- receiving messages from queue -->
 	<int:channel id="fromRabbit"/>
-	
 	<int-amqp:inbound-channel-adapter 
 	channel="fromRabbit" 
-	queue-names="si.test.queue1" 
+	queue-names="si.test.queue1,si.test.queue4" 
 	connection-factory="connectionFactory"   
-	mapped-request-headers="message_source,message_service"	
+	mapped-request-headers="message_*"	
 	/>
 	
+
 	
-	 <!-- *********************************** 
+	 <!-- 
+	 *********************************** 
 		 using the Service activator as the 'client for the 
 		 what we will be testing is the response time of all service's  being call back at the same time versus the
 		 sequential nature of the ws outbound adapter.
 		 1 message processed by multiple services in paralell as apposed to sequentially by the webservice
-		***********************************  --> 
+		***********************************  
+		--> 
 	
-	
-	<!-- <int:service-activator input-channel="fromRabbit" ref="amqpServiceActivator" method="amqpServiceActivatorMethod"/>
-	 -->
-	
-
     
     
     <!-- *********************************** 
@@ -106,20 +121,126 @@
 	<!-- Configure a SI outbound adpater to log each message time 
 		Should be able to configure this to 
 	-->
+	
+	
+	
+	<!--  -->
+	
+	
+
+
+<!-- ie.cit.cloud.mvc.event.mvcApplicationEventListener -->
+
+
+  
+	<int-event:inbound-channel-adapter channel="eventChannel" 
+								 error-channel="eventErrorChannel"
+								event-types="org.springframework.web.context.support.RequestHandledEvent"
+								payload-expression="source" /> 
+								
+                                            
+     <int:publish-subscribe-channel id="eventChannel"/>
+     <int:channel id="eventErrorChannel"></int:channel>
+ 
+
+
 
 	
-	<int-jdbc:outbound-channel-adapter id="jdbc-outboundChannelAdapter"
-    query="insert into lot_lu_loadtest_logger (
-    lo_message_start_time, 
-    lo_message_end_time, 
-    lo_message_channel, 
-    lo_message_service,
-    lo_message_timestamp)
-    values (:headers[timestamp],1,:headers[message_source], :headers[message_service], now())"
-    data-source="dataSource"
-    channel="fromRabbit"/>
-    
-    <!-- ******************************* -->
+	
+	<!-- ****** CONFIGURE SOME SPEL EXPRESSIONS TO TRACK TIMES 
+				AT VARIOUS HOPS IN THE ROUTE 
+				***********
+	 -->
+	
+	<!--  
+	<jdbc:outbound-channel-adapter data-source="dataSource" channel="input"
+    query="insert into MESSAGES (MESSAGE_ID,PAYLOAD,CREATED_DATE)     
+    values (:id, :payload, :createdDate)"
+    sql-parameter-source-factory="spelSource"/>
+		
+		-->
+		<bean id="spelSource"
+		      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
+		    <property name="parameterExpressions">
+		        <map>
+		        <!--new java.util.TimeStamp() T(java.lang.System).currentTimeMillis() -->
+		            <entry key="createdDate" value="T(java.lang.System).currentTimeMillis() "/>
+		             <entry key="time" value="payload.time"/>
+		        </map>
+		    </property>
+		</bean>
+
+		<int-jdbc:outbound-channel-adapter
+			id="jdbc-AMQPoutboundChannelAdapter"
+			query="insert into lot_lu_loadtest_logger (
+				    lo_message_start_time, 
+				    lo_message_test_id, 
+				    lo_message_channel, 
+				    lo_message_service,
+				    lo_message_timestamp)
+   		values (:headers[timestamp],
+   				:headers[message_test_id],
+   				:headers[message_source], 
+   				:headers[message_service], 
+   				:createdDate)"
+			data-source="dataSource" channel="fromRabbit"
+			sql-parameter-source-factory="spelSource" />
+
+
+
+<!-- 
+
+
+This is an example of a captured event
+
+ServletRequestHandledEvent: 
+url=[/pointofsale/amqp/1]; 
+client=[127.0.0.1]; 
+method=[POST]; 
+servlet=[appServlet]; 
+session=[null]; 
+user=[null]; 
+time=[375ms]; 
+status=[OK]
+
+
+ lo_message_controller_time varchar(250), lo_message_controller_url
+ -->
+ 
+ 
+		<int-jdbc:outbound-channel-adapter
+				id="jdbc-EventoutboundChannelAdapter"
+				query="insert into lot_lu_loadtest_logger (
+					    lo_message_start_time,
+					    lo_message_controller_time, 
+					    lo_message_channel, 
+					    lo_message_controller_url
+					    lo_message_timestamp)
+		    	values (:headers[timestamp],
+		    			:time,
+		    			:payload[servlet], 
+		    			:payload[url], 
+		    			:createdDate)"
+				data-source="dataSource" channel="eventChannel"
+				sql-parameter-source-factory="spelSource" />
+				
+		<int-jdbc:outbound-channel-adapter
+		id="jdbc-WSoutboundChannelAdapter"
+		query="insert into lot_lu_loadtest_logger (
+			    lo_message_start_time, 
+			    lo_message_test_id, 
+			    lo_message_channel, 
+			    lo_message_service,
+			    lo_message_timestamp)
+    	values (:headers[timestamp],
+    			:headers[message_test_id],
+    			:headers[message_source], 
+    			:headers[message_service], 
+    			:createdDate)"
+		data-source="dataSource" channel="output"
+		sql-parameter-source-factory="spelSource" />
+
+	<!-- ******************************* -->
 	<!-- Configure a SI outbound adpater to log each message time -->
     
 <!-- *********************************** 
@@ -130,8 +251,10 @@
 <!-- *********************************** 
 		SET OF Consoler Out Adapter for testing etc
 	*******************************  --> 
+	
+	<!--
   <int-stream:stdout-channel-adapter id="consoleOutTest" channel="fromRabbit" append-newline="true" />
-
+ -->
  <!-- *********************************** 
 		End of Console-Out Adapter for testing etc 
 	***********************************  --> 
@@ -156,12 +279,13 @@
 	
 	<int-stream:stdout-channel-adapter
 		id="consoleOut" 
-		channel="output" 
+		channel="eventChannel" 
 		append-newline="true" 
 	/>
+	 
 
 <!--  ****** LOCAL CONFIG ***** -->
-  
+<!--   
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
@@ -170,9 +294,9 @@
 		unmarshaller="marshaller">
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 	</int-ws:outbound-gateway>
-
+ -->
 <!--  ****** Cloudfoundry Config CONFIG ***** -->
-<!-- 
+
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
@@ -182,6 +306,8 @@
 		>
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
-  -->
-
+ 
+  
+  
+ 
 </beans>
