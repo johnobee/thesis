@@ -21,10 +21,10 @@ public class  amqpServiceActivator {
 	
 	@ServiceActivator
     public void amqpServiceActivatorMethod(String param) {
-    	tmpl.receiveAndConvert("si.test.queue1");
-      amqplogger.info("serviceMethod received Q1: " + param + tmpl.receiveAndConvert("si.test.queue1"));
-      amqplogger.info("serviceMethod received:Q2: " + param + tmpl.receiveAndConvert("si.test.queue2"));
-      amqplogger.info("serviceMethod received:Q3: " + param + tmpl.receiveAndConvert("si.test.queue3"));
+    	tmpl.receiveAndConvert("fromRabbit");
+      amqplogger.info("serviceMethod received Q1: " + param + tmpl.receiveAndConvert("fromRabbit"));
+      amqplogger.info("serviceMethod received:Q2: " + param + tmpl.receiveAndConvert("fromRabbit"));
+      amqplogger.info("serviceMethod received:Q3: " + param + tmpl.receiveAndConvert("fromRabbit"));
     //return "hello, " + param;
     }
 }

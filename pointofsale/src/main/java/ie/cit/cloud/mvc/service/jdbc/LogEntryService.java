@@ -47,7 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
 	  logger.debug("Retrieving all log entries");
 	   
 	  // Prepare our SQL statement
-	  String sql = "select lo_message_start_time, lo_message_end_time, lo_message_channel,lo_message_service, lo_message_timestamp from lot_lu_loadtest_logger";
+	  String sql = "select lo_message_start_time, lo_message_test_id, lo_message_channel,lo_message_service, lo_message_timestamp from lot_lu_loadtest_logger";
 	   
 	  /*
 	   CREATE TABLE lot_lu_loadtest_logger
@@ -66,7 +66,7 @@ import org.springframework.transaction.annotation.Transactional;
 	         public LogEntry mapRow(ResultSet rs, int rowNum) throws SQLException {
 	          LogEntry logentry = new LogEntry();
 	          logentry.setLo_message_start_time(rs.getString("lo_message_start_time"));
-	          logentry.setLo_message_end_time(rs.getString("lo_message_end_time"));
+	          logentry.setLo_message_test_id(rs.getString("lo_message_test_id"));
 	          logentry.setLo_message_channel(rs.getString("lo_message_channel"));
 	          logentry.setLo_message_service(rs.getString("lo_message_service"));
 	          logentry.setLo_message_timestamp(rs.getString("lo_message_timestamp"));

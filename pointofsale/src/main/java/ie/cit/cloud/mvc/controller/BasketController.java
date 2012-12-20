@@ -16,7 +16,6 @@
 package ie.cit.cloud.mvc.controller;
 
 import java.util.List;
-
 import ie.cit.cloud.pointofsale.*;
 
 import org.slf4j.Logger;
@@ -37,6 +36,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.annotation.Resource;
+import javax.tools.JavaCompiler;
+
 import ie.cit.cloud.mvc.model.LogEntry;
 import ie.cit.cloud.mvc.service.jdbc.LogEntryService;
 /**
@@ -66,6 +67,7 @@ public class BasketController {
 	
 	 @Resource(name="logEntryService")
 	 private LogEntryService logEntryService;
+	
 	  
 	 /**
 	  * Handles and retrieves all persons and show it in a JSP page
@@ -97,15 +99,21 @@ public class BasketController {
 	 * 	AMQP Controller Elements
 	 */
 
-	
-	@RequestMapping(value = "/amqp", 
+	   /* 
+	    * curl -X POST -H "Content-Type: text/xml" -d @salesTransactionRequest.xml http://localhost:8080/pointofsale/amqp/1
+	    */
+	    
+	@RequestMapping(value = "/amqp/{testid}", 
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket){
+	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket, 
+			@PathVariable("testid") String testid)
+		{
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "AMQP")
 		        .setHeader("message_service", "AMQP")
+		        .setHeader("message_test_id", testid)
 		        .build();
 		
 			logger.info("************************************");
@@ -127,22 +135,27 @@ public class BasketController {
 	 * 	WS Controller Elements
 	 */
 
+	 /* 
+	    * curl -X POST - H "Content-Type: text/xml" -d @salesTransactionRequest.xml http://localhost:8080/pointofsale/ws/1
+	    */
+	    
 	
-	@RequestMapping(value = "/ws/{resource}", 
+	@RequestMapping(value = "/ws/{testid}", 
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
 	public void registerBasketWS(@RequestBody SalesTransactionRequest transactionBasket, 
-			@PathVariable("resource") String resource)
+			@PathVariable("testid") String testid)
 	{
 			
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
-		        .setHeader("message_service", resource)
+		        .setHeader("message_service", "loyalty")
+		        .setHeader("message_test_id", testid)
 		        .build();
 		
 			logger.info("************************************");
-			logger.info("ABOUT TO SEND FROM WS CONTROLLER");
+			logger.info("ABOUT TO SEND LOYALY FROM WS CONTROLLER");
 			logger.info("************************************");
 			
 			
@@ -152,6 +165,47 @@ public class BasketController {
 			logger.info("************************************");
 			logger.info("BACK TO THE WS CONTROLLER");
 			logger.info("************************************");
+			
+			
+			// SET 
+			
+		 message = MessageBuilder.withPayload(transactionBasket)
+			        .setHeader("message_source", "WS")
+			        .setHeader("message_service", "creditcard")
+			        
+			        .setHeader("message_test_id", testid)
+			        .build();
+			
+				logger.info("************************************");
+				logger.info("ABOUT TO SEND LOYALY FROM WS CONTROLLER");
+				logger.info("************************************");
+				
+				
+				//tmpl.convertAndSend(input, message); 
+				tmpl.convertAndSend(input, message);//(input, message);
+				
+				logger.info("************************************");
+				logger.info("BACK TO THE WS CONTROLLER");
+				logger.info("************************************");
+				
+				
+				message = MessageBuilder.withPayload(transactionBasket)
+				        .setHeader("message_source", "WS")
+				        .setHeader("message_service", "promotion")
+				        .setHeader("message_test_id", testid)
+				        .build();
+				
+					logger.info("************************************");
+					logger.info("ABOUT TO SEND LOYALY FROM WS CONTROLLER");
+					logger.info("************************************");
+					
+					
+					//tmpl.convertAndSend(input, message); 
+					tmpl.convertAndSend(input, message);//(input, message);
+					
+					logger.info("************************************");
+					logger.info("BACK TO THE WS CONTROLLER");
+					logger.info("************************************");
 			
 	}
 }
