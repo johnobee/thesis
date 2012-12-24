@@ -20,9 +20,12 @@ import ie.cit.cloud.pointofsale.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.MessageProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+//import org.springframework.amqp.core.Message;
+
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageChannel;
 import org.springframework.integration.core.MessagingTemplate;
@@ -36,7 +39,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 import javax.annotation.Resource;
-import javax.tools.JavaCompiler;
 
 import ie.cit.cloud.mvc.model.LogEntry;
 import ie.cit.cloud.mvc.service.jdbc.LogEntryService;
@@ -103,6 +105,9 @@ public class BasketController {
 	    * curl -X POST -H "Content-Type: text/xml" -d @salesTransactionRequest.xml http://localhost:8080/pointofsale/amqp/1
 	    */
 	    
+	   
+	
+	    
 	@RequestMapping(value = "/amqp/{testid}", 
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
@@ -110,18 +115,47 @@ public class BasketController {
 	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket, 
 			@PathVariable("testid") String testid)
 		{
+		
+		 // Create a new MessageProperties
+		  // Assign custom header and content type
+		  MessageProperties properties = new MessageProperties();
+		     properties.setHeader("keyword", "SALES");
+		     properties.setContentType("text/plain");
+		     
+		     // Wrapped our custom text and properties as a Message
+		   //  Message message = new Message(text.getBytes(), properties);
+		      
+		     // Send the message
+		 // sender.send("1234567;Branch A;SALES;3000.50;Pending approval", properties);
 		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "AMQP")
 		        .setHeader("message_service", "AMQP")
 		        .setHeader("message_test_id", testid)
+		        .setHeader("message_aggregator_count", "4")
+		        .setHeader("contentType", "text/plain")
 		        .build();
+		
 		
 			logger.info("************************************");
 			logger.info("ABOUT TO SEND FROM AMQP CONTROLLER");
 			logger.info("************************************");
 			
 			
+		
+			//roperties.putString("contentType", "text/plain")
 			tmpl.convertAndSend(toRabbit, message);
+
+	
+				//tmpl.convertAndSend(toRabbit, message);
+
+			/*
+			 * I use this Code 
+
+                        template.setExchange("exchange"); 
+                        template.setQueue("someQueue"); 
+                        template.setRoutingKey("someQueue"); 
+                        Message response = template.sendAndReceive("exchange", "anotherQueue" , message); 
+			 */
 		
 			
 			logger.info("************************************");
@@ -139,12 +173,13 @@ public class BasketController {
 	    * curl -X POST - H "Content-Type: text/xml" -d @salesTransactionRequest.xml http://localhost:8080/pointofsale/ws/1
 	    */
 	    
-	
+
 	@RequestMapping(value = "/ws/{testid}", 
 					method = RequestMethod.POST, 
 					headers="Accept=application/xml, application/json")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasketWS(@RequestBody SalesTransactionRequest transactionBasket, 
+	public void registerBasketWS(
+			@RequestBody SalesTransactionRequest transactionBasket, 
 			@PathVariable("testid") String testid)
 	{
 			
@@ -152,6 +187,7 @@ public class BasketController {
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", "loyalty")
 		        .setHeader("message_test_id", testid)
+		        .setHeader("content_type", "application/xml")
 		        .build();
 		
 			logger.info("************************************");
@@ -160,6 +196,7 @@ public class BasketController {
 			
 			
 			//tmpl.convertAndSend(input, message); 
+			
 			tmpl.convertAndSend(input, message);//(input, message);
 			
 			logger.info("************************************");
