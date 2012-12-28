@@ -4,7 +4,7 @@
 	elementFormDefault="qualified">
 
 	
-<xs:element name="salesTransactionRequest">
+<xs:element name="SalesTransactionRequest">
   <xs:complexType>
     <xs:sequence>
       <xs:element name="totalValue" type="xs:decimal"/>
@@ -24,7 +24,7 @@
 </xs:element>
 
 
-	<xs:element name="loyaltyResponse">
+	<xs:element name="LoyaltyResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="loyaltyNumber" type="xs:string" />
@@ -32,7 +32,7 @@
 		</xs:complexType>
 	</xs:element>
 	
-	<xs:element name="creditcardResponse">
+	<xs:element name="CreditcardResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="creditcardNumber" type="xs:string" />
@@ -41,7 +41,7 @@
 	</xs:element>
  
  
-	<xs:element name="promotionResponse">
+	<xs:element name="PromotionResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="promotionNumber" type="xs:string" />
@@ -49,7 +49,7 @@
 		</xs:complexType>
 	</xs:element>
 	
-		<xs:element name="voucherResponse">
+		<xs:element name="VoucherResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="voucherNumber" type="xs:string" />

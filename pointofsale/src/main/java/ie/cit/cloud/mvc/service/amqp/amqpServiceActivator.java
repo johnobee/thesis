@@ -18,7 +18,7 @@ public class  amqpServiceActivator {
 
 	protected static Logger amqplogger = Logger.getLogger("amqpservice");
 	@Autowired
-	@Qualifier("fromRabbit")
+	@Qualifier("fromRabbit.epos.loyalty")
 	MessageChannel fromRabbit;
 
 	@Autowired

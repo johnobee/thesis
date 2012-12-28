@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-	targetNamespace="http://cloud.cit.ie/pointofsale123" xmlns:r="http://cloud.cit.ie/pointofsale456"
+	targetNamespace="http://cloud.cit.ie/pointofsale" xmlns:r="http://cloud.cit.ie/pointofsale"
 	elementFormDefault="qualified">
 
 	
-<xs:element name="salesTransactionRequest">
+<xs:element name="SalesTransactionRequest">
   <xs:complexType>
     <xs:sequence>
       <xs:element name="totalValue" type="xs:decimal"/>
@@ -20,32 +20,11 @@
         </xs:complexType>
       </xs:element>
     </xs:sequence>
-
   </xs:complexType>
 </xs:element>
 
-	<xs:element name="salesTransactionResponse">
-		<xs:complexType>
-			<xs:attribute name="confirmationNumber" type="xs:string" />
-			<xs:attribute name="transactionNumber" type="xs:string" />
-		</xs:complexType>
-	</xs:element>
 
-
-	<xs:element name="loyaltyRequest">
-		<xs:complexType>
-			<xs:sequence minOccurs="0" maxOccurs="unbounded">
-				<xs:element name="productCode" type="xs:integer" />
-				<xs:element name="productQuantity" type="xs:integer" />
-				<xs:element name="productDiscount" type="xs:decimal" />
-			</xs:sequence>
-			<xs:attribute name="basketAmount" use="required" type="xs:decimal" />
-			<xs:attribute name="loyaltyCard" use="required" type="xs:decimal" />
-			<xs:attribute name="transactionID" use="required" type="xs:decimal" />
-		</xs:complexType>
-	</xs:element>		
-
-	<xs:element name="loyaltyResponse">
+	<xs:element name="LoyaltyResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="loyaltyNumber" type="xs:string" />
@@ -53,24 +32,28 @@
 		</xs:complexType>
 	</xs:element>
 	
-	<xs:element name="creditcardRequest">
-		<xs:complexType>
-			<xs:sequence minOccurs="0" maxOccurs="unbounded">
-				<xs:element name="productCode" type="xs:integer" />
-				<xs:element name="productQuantity" type="xs:integer" />
-				<xs:element name="productDiscount" type="xs:decimal" />
-			</xs:sequence>
-			<xs:attribute name="basketAmount" use="required" type="xs:decimal" />
-			<xs:attribute name="loyaltyCard" use="required" type="xs:decimal" />
-			<xs:attribute name="transactionID" use="required" type="xs:decimal" />
-		</xs:complexType>
-	</xs:element>		
-
-	<xs:element name="creditcardResponse">
+	<xs:element name="CreditcardResponse">
 		<xs:complexType>
 			<xs:attribute name="confirmationNumber" type="xs:string" />
 			<xs:attribute name="creditcardNumber" type="xs:string" />
 			<xs:attribute name="creditcardValue" type="xs:decimal" />
+		</xs:complexType>
+	</xs:element>
+ 
+ 
+	<xs:element name="PromotionResponse">
+		<xs:complexType>
+			<xs:attribute name="confirmationNumber" type="xs:string" />
+			<xs:attribute name="promotionNumber" type="xs:string" />
+			<xs:attribute name="promotionDiscountValue" type="xs:decimal" />
+		</xs:complexType>
+	</xs:element>
+	
+		<xs:element name="VoucherResponse">
+		<xs:complexType>
+			<xs:attribute name="confirmationNumber" type="xs:string" />
+			<xs:attribute name="voucherNumber" type="xs:string" />
+			<xs:attribute name="voucherValue" type="xs:decimal" />
 		</xs:complexType>
 	</xs:element>
  

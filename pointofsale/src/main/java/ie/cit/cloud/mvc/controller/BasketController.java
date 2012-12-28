@@ -21,14 +21,21 @@ import ie.cit.cloud.pointofsale.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.MessageProperties;
+import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+
 //import org.springframework.amqp.core.Message;
+
 
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageChannel;
 import org.springframework.integration.core.MessagingTemplate;
+
+
+
+
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -62,8 +69,8 @@ public class BasketController {
 	MessageChannel toRabbit;
 	
 
-	
 	private MessagingTemplate tmpl = new MessagingTemplate();
+
 	
 
 	
@@ -110,7 +117,7 @@ public class BasketController {
 	    
 	@RequestMapping(value = "/amqp/{testid}", 
 					method = RequestMethod.POST, 
-					headers="Accept=application/xml, application/json")
+					headers="Accept=text/xml")
 	@ResponseStatus(value = HttpStatus.OK)
 	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket, 
 			@PathVariable("testid") String testid)
@@ -132,7 +139,8 @@ public class BasketController {
 		        .setHeader("message_service", "AMQP")
 		        .setHeader("message_test_id", testid)
 		        .setHeader("message_aggregator_count", "4")
-		        .setHeader("contentType", "text/plain")
+		        .setHeader("contentType", "text/xml")
+		        .setSequenceSize(2)
 		        .build();
 		
 		
@@ -142,11 +150,17 @@ public class BasketController {
 			
 			
 		
-			//roperties.putString("contentType", "text/plain")
-			tmpl.convertAndSend(toRabbit, message);
+			//roperties.putString("contentType", "text/xml")
+			
+			//MessageConverter converter = null;
+			//converter.toMessage(message, properties);
+			//tmpl.setMessageConverter(converter);
+		
+			//tmpl.send(toRabbit, message);
 
 	
-				//tmpl.convertAndSend(toRabbit, message);
+			tmpl.convertAndSend(toRabbit, message.toString());
+			
 
 			/*
 			 * I use this Code 
@@ -157,7 +171,7 @@ public class BasketController {
                         Message response = template.sendAndReceive("exchange", "anotherQueue" , message); 
 			 */
 		
-			
+			logger.info(message.getPayload().toString());
 			logger.info("************************************");
 			logger.info("BACK TO THE AMQP CONTROLLER");
 			logger.info("************************************");

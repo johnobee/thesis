@@ -13,7 +13,7 @@ public class VoucherEndpoint {
 
 	private static final String NAMESPACE_URI = "http://cloud.cit.ie/pointofsale";
 
-	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "salesTransactionRequest")
+	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "SalesTransactionRequest")
 	@ResponsePayload
 	public VoucherResponse voucherReward(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);

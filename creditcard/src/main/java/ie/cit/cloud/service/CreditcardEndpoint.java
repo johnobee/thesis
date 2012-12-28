@@ -13,7 +13,7 @@ public class CreditcardEndpoint {
 
 	private static final String NAMESPACE_URI = "http://cloud.cit.ie/pointofsale";
 
-	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "salesTransactionRequest")
+	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "SalesTransactionRequest")
 	@ResponsePayload
 	public CreditcardResponse creditcardAuth(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);

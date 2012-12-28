@@ -25,8 +25,7 @@
 	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
 	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
 	    http://schema.cloudfoundry.org/spring http://schema.cloudfoundry.org/spring/cloudfoundry-spring.xsd
-	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.1.xsd
-	    http://camel.apache.org/schema/spring http://camel.apache.org/schema/spring/camel-spring-2.10.1.xsd">
+	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.1.xsd">
 	    
 
 	<context:component-scan base-package="ie.cit.cloud.mvc" />
@@ -35,16 +34,20 @@
 	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter"/>
 	<bean id="xmlMessageConverter" class="org.springframework.amqp.support.converter.SerializerMessageConverter"/>
 <!-- 
-	<bean id="messageConverter" class="org.springframework.amqp.support.ContentTypeConverterFactory">
-	    <property name="converters">
+<bean id="marhsallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter"/>
+ -->
+
+<!-- 
+	<bean id="messageConverter" class="org.springframework.amqp.support.converter.SimpleMessageConverter">
+	    <property name="messageConverter">
 	        <map>
 	            <entry key="application/json" value-ref="jsonMessageConverter"/>
 	            <entry key="application/xml" value-ref="textMessageConverter"/>
 	        </map>
 	    </property>
-	    <property name="fallbackConverter" ref="jsonMessageConverter"/>
+	    <property name="fallbackConverter" ref="xmlMessageConverter"/>
 	</bean>
-	 -->
+	-->
 	<!-- 
 	<bean id="MarshallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter" 
  -->
@@ -52,16 +55,20 @@
 message-converter="jsonMessageConverter"
 message-converter="MarshallingMessageConverter"
 
- 
+
  <bean id="template" class="org.springframework.amqp.rabbit.core.RabbitTemplate"> 
- 	<property name="connectionFactory" ref="rabbitConnFactory" /> 
+ 		<property name="connectionfactory" ref="rabbitConnFactory" /> 
         <property name="routingKey" value="test.queue"/> 
         <property name="queue" value="junitqueue"/> 
         <property name="messageConverter" ref="messageConverter" /> 
 </bean> 
- -->
-		<rabbit:connection-factory id="connectionFactory" />
-		<rabbit:template id="amqpTemplate" connection-factory="connectionFactory" />
+  -->
+
+ 	<rabbit:connection-factory id="connectionFactory" />
+		<rabbit:template id="amqpTemplate" 
+		routing-key=""
+		connection-factory="connectionFactory" />
+	
 		<rabbit:admin connection-factory="connectionFactory" />
 		<rabbit:queue name="epos.loyalty"  />
 		<rabbit:queue name="epos.creditcard" />
@@ -91,7 +98,9 @@ message-converter="MarshallingMessageConverter"
 	<int:channel id="toRabbit" />
 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
 		exchange-name="epos.main.exchange.fanout" channel="toRabbit"
-		mapped-request-headers="*" />
+		routing-key="epos.main.exchange.fanout"
+		mapped-request-headers="*" 
+		/>
 
 	<!-- sending messages -->
 	<int:channel id="toLogChannel" />
@@ -103,11 +112,12 @@ message-converter="MarshallingMessageConverter"
 	<int:channel id="fromRabbit.epos.loyalty"/>
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_loyalty_adapter"
-	channel="output" 
+	channel="fromRabbit_loyalty" 
 	queue-names="epos.loyalty" 
 	connection-factory="connectionFactory"   
 	mapped-request-headers="*"	
 	error-channel="eventErrorChannel"
+	message-converter="jsonMessageConverter" 
 	/>
 		
 	<!-- receiving messages from queue and send to channel-->
@@ -116,34 +126,66 @@ message-converter="MarshallingMessageConverter"
 	MarshallingMessageConverter
 	http://static.springsource.org/spring-integration/reference/html/amqp.html 
 	 -->
-
+<!-- 
+	<int:channel id="fromRabbit.epos.creditcard"/>
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_creditcard_adapter"
-	channel="output" 
+	channel="aggregateChannel" 
 	queue-names="epos.creditcard" 
 	connection-factory="connectionFactory" 
 	error-channel="eventErrorChannel"
 	mapped-request-headers="*"	 
 	/>
-	<!-- 
+	
+	
+		
+	 -->
+	 
+	 <!-- 
+	 <int:payload-serializing-transformer input-channel="objectsIn" output-channel="bytesOut"/>
+
+ <int:payload-deserializing-transformer input-channel="bytesIn" output-channel="objectsOut"/>
+	  -->
+	 <int:object-to-json-transformer input-channel="toRabbit"/>
 	<int:channel id="fromRabbit_loyalty"/>
 	<int-ws:outbound-gateway id="loyaltyGateway"
 		request-channel="fromRabbit_loyalty"
-		reply-channel="outputAggregatorChannel" 
-		uri="http://loyalty.cloudfoundry.com/loyalty/baskets" 
+		reply-channel="output" 
+		uri="http://loyalty.cloudfoundry.com/loyalty/baskets"
 		marshaller="marshaller"
 		unmarshaller="marshaller"
 		/>
-		-->
+		
 	
 	<!-- 
 	**** AGGREGATOR CHANNEL WILL GO HERE ****
-	 -->
-	<!--  
-	<int:channel id="outputAggregatorChannel"/>
-	<int:aggregator input-channel="outputAggregatorChannel" ref="amqpMessageAggregator" method="aggregateBaskets">
-	</int:aggregator>
-	 -->
+		EXAMPLE from KRAMS
+		<aggregator input-channel="aggregateChannel"
+		  output-channel="wsChannel" ref="productAggregatorBean" method="send"
+		  release-strategy="productAggregatorBean" release-strategy-method="release"
+		  correlation-strategy="productAggregatorBean" correlation-strategy-method="correlate"
+		  send-partial-result-on-expiry="false" />
+		  	
+		  <beans:bean id="productAggregatorBean" class="org.krams.tutorial.si.ProductAggregator" />
+		
+			<int:aggregator input-channel="aggregateChannel"
+		  output-channel="output" ref="amqpMessageAggregator" method="send"
+		  release-strategy="amqpMessageAggregator" release-strategy-method="release"
+		  correlation-strategy="amqpMessageAggregator" correlation-strategy-method="correlate"
+		  send-partial-result-on-expiry="false" />
+		  
+		  release-strategy-expression="size() == 2"
+		
+	
+	  <bean id="amqpMessageAggregator" class="ie.cit.cloud.mvc.service.amqp.amqpMessageAggregator" />
+	<int:channel id="aggregateChannel"></int:channel>
+	<int:aggregator input-channel="aggregateChannel"
+		  output-channel="output" ref="amqpMessageAggregator" 
+		  release-strategy="amqpMessageAggregator" release-strategy-method="release"
+		  release-strategy-expression="size() == 2"
+		 />
+ -->
+	  
 	
 	
 	 <!-- 
@@ -190,7 +232,7 @@ message-converter="MarshallingMessageConverter"
  
 	<int-event:inbound-channel-adapter channel="eventChannel" 
 								 error-channel="eventErrorChannel"
-								event-types="org.springframework.web.context.support.RequestHandledEvent"/> 
+								event-types="org.springframework.web.context.support.ServletRequestHandledEvent"/> 
      <int:publish-subscribe-channel id="eventChannel"/>
      <int:channel id="eventErrorChannel"></int:channel>
 
@@ -209,29 +251,26 @@ message-converter="MarshallingMessageConverter"
 		 lo_message_controller_time varchar(250), lo_message_controller_url
  	-->
  	
- 	<!-- 
+ 	
   	<int-jdbc:outbound-channel-adapter
 				id="jdbc-EventoutboundChannelAdapter"
 				query="insert into lot_lu_loadtest_logger (
 					    lo_message_start_time,
-					    lo_message_timestamp)
+					    lo_message_controller_url,
+					    lo_message_controller_time)
 		    	values (:headers[timestamp],
-		    			:url)"
-				data-source="dataSource" channel="eventChannel"
+		    			:url,
+		    			:time)"
+		    	data-source="dataSource" channel="eventChannel"
 				sql-parameter-source-factory="spelSource" />
-	 -->
 
-<!-- 
-you can leave timestamp and 
-convert java.util.Date into java.sql.Date -> new java.sql.Date(utilDate.getTime());
- -->
 		<bean id="spelSource"
 		      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
 		    <property name="parameterExpressions">
 		        <map>
-		        <!--new java.util.TimeStamp() T(java.lang.System).currentTimeMillis() -->
-		            <entry key="createdDate" value="T(java.lang.System).currentTimeMillis() "/>
-		            <entry key="url" value="testurl data"/>
+		            <entry key="createdDate" value="T(java.lang.System).currentTimeMillis()" />
+		            <entry key="url" value="payload.getRequestUrl()" />
+		            <entry key="time" value="payload.getProcessingTimeMillis()" />
 		            </map>
 		    </property>
 		</bean>
@@ -305,7 +344,7 @@ convert java.util.Date into java.sql.Date -> new java.sql.Date(utilDate.getTime(
     			:headers[message_service], 
     			'test12')"
 		data-source="dataSource" 
-		request-channel="fromRabbit, fromRabbit_loyalty" 
+		request-channel="fromRabbit.epos.loyalty, fromRabbit.epos.creditcard" 
 		reply-channel="output"
 		/>
 		
@@ -347,6 +386,17 @@ convert java.util.Date into java.sql.Date -> new java.sql.Date(utilDate.getTime(
 	<int-stream:stdout-channel-adapter
 		id="consoleOutEvent" 
 		channel="eventChannel" 
+		append-newline="true" 
+	/>
+	
+	<int-stream:stdout-channel-adapter
+		id="consoleInput" 
+		channel="input" 
+		append-newline="true" 
+	/>
+	<int-stream:stdout-channel-adapter
+		id="consoleOutPutEvent" 
+		channel="output" 
 		append-newline="true" 
 	/>
 		<int-stream:stdout-channel-adapter

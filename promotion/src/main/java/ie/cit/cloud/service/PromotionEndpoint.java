@@ -1,6 +1,7 @@
 package ie.cit.cloud.service;
-import ie.cit.cloud.pointofsale.SalesTransactionRequest;
 import ie.cit.cloud.pointofsale.PromotionResponse;
+import ie.cit.cloud.pointofsale.SalesTransactionRequest;
+
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
 import org.springframework.ws.server.endpoint.annotation.PayloadRoot;
 import org.springframework.ws.server.endpoint.annotation.RequestPayload;
@@ -12,7 +13,7 @@ public class PromotionEndpoint {
 
 	private static final String NAMESPACE_URI = "http://cloud.cit.ie/pointofsale";
 
-	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "salesTransactionRequest")
+	@PayloadRoot(namespace = NAMESPACE_URI, localPart = "SalesTransactionRequest")
 	@ResponsePayload
 	public PromotionResponse promotionAvailableReward(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);
