@@ -17,8 +17,9 @@ import org.springframework.integration.support.MessageBuilder;
 public class  amqpServiceActivator {
 
 	protected static Logger amqplogger = Logger.getLogger("amqpservice");
+	/*
 	@Autowired
-	@Qualifier("fromRabbit.epos.loyalty")
+	@Qualifier("fromRabbit_loyalty")
 	MessageChannel fromRabbit;
 
 	@Autowired
@@ -38,4 +39,6 @@ public class  amqpServiceActivator {
       amqplogger.info("serviceMethod received:Q3: " + param + tmpl.receiveAndConvert("fromRabbit"));
     //return "hello, " + param;
     }
+	
+	*/
 }

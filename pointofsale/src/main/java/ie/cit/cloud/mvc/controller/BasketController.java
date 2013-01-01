@@ -15,13 +15,15 @@
  */
 package ie.cit.cloud.mvc.controller;
 
+
 import java.util.List;
 import ie.cit.cloud.pointofsale.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.support.converter.MessageConverter;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -52,6 +54,7 @@ import ie.cit.cloud.mvc.service.jdbc.LogEntryService;
 /**
  * Handles requests for the application home page.
  */
+
 
 
 @Controller
@@ -100,9 +103,6 @@ public class BasketController {
 	  
 
 	
-		
-	
-	
 	
 	/* 
 	 * 	AMQP Controller Elements
@@ -117,53 +117,37 @@ public class BasketController {
 	    
 	@RequestMapping(value = "/amqp/{testid}", 
 					method = RequestMethod.POST, 
-					headers="Accept=text/xml")
+					headers="Accept=text/xml, application/xml, text/plain")
 	@ResponseStatus(value = HttpStatus.OK)
-	public void registerBasketAMQP(@RequestBody SalesTransactionRequest transactionBasket, 
+	public void registerBasketAMQP(@RequestBody String transactionBasket, 
 			@PathVariable("testid") String testid)
 		{
 		
-		 // Create a new MessageProperties
-		  // Assign custom header and content type
-		  MessageProperties properties = new MessageProperties();
-		     properties.setHeader("keyword", "SALES");
-		     properties.setContentType("text/plain");
-		     
-		     // Wrapped our custom text and properties as a Message
-		   //  Message message = new Message(text.getBytes(), properties);
-		      
-		     // Send the message
-		 // sender.send("1234567;Branch A;SALES;3000.50;Pending approval", properties);
-		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
-		        .setHeader("message_source", "AMQP")
-		        .setHeader("message_service", "AMQP")
-		        .setHeader("message_test_id", testid)
-		        .setHeader("message_aggregator_count", "4")
-		        .setHeader("contentType", "text/xml")
-		        .setSequenceSize(2)
-		        .build();
+		Message<String> message = MessageBuilder.withPayload(transactionBasket)
+						.setHeader("message_source", "AMQP")
+				        .setHeader("message_service", "AMQP")
+				        .setHeader("message_test_id", testid)
+				        .setHeader("message_aggregator_count", "4")
+				        .setSequenceSize(2)
+		       	        .build();
 		
 		
 			logger.info("************************************");
 			logger.info("ABOUT TO SEND FROM AMQP CONTROLLER");
 			logger.info("************************************");
 			
-			
-		
-			//roperties.putString("contentType", "text/xml")
-			
-			//MessageConverter converter = null;
-			//converter.toMessage(message, properties);
-			//tmpl.setMessageConverter(converter);
-		
-			//tmpl.send(toRabbit, message);
-
-	
-			tmpl.convertAndSend(toRabbit, message.toString());
-			
+				
+			tmpl.convertAndSend(toRabbit, message);
+			logger.info("Here it is" + message.toString());
 
 			/*
-			 * I use this Code 
+			 // Create a new MessageProperties
+			  // Assign custom header and content type
+			  MessageProperties properties = new MessageProperties();
+			     properties.setHeader("keyword", "SALES");
+			     properties.setContentType("text/plain");
+			
+			 * I will use this Code pull back 
 
                         template.setExchange("exchange"); 
                         template.setQueue("someQueue"); 
@@ -190,18 +174,17 @@ public class BasketController {
 
 	@RequestMapping(value = "/ws/{testid}", 
 					method = RequestMethod.POST, 
-					headers="Accept=application/xml, application/json")
+					headers="Accept=text/xml, application/xml")
 	@ResponseStatus(value = HttpStatus.OK)
 	public void registerBasketWS(
-			@RequestBody SalesTransactionRequest transactionBasket, 
+			@RequestBody String transactionBasket, 
 			@PathVariable("testid") String testid)
 	{
 			
-		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
+		Message<String> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", "loyalty")
 		        .setHeader("message_test_id", testid)
-		        .setHeader("content_type", "application/xml")
 		        .build();
 		
 			logger.info("************************************");
@@ -223,7 +206,6 @@ public class BasketController {
 		 message = MessageBuilder.withPayload(transactionBasket)
 			        .setHeader("message_source", "WS")
 			        .setHeader("message_service", "creditcard")
-			        
 			        .setHeader("message_test_id", testid)
 			        .build();
 			

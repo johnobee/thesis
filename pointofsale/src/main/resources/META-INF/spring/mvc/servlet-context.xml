@@ -14,28 +14,10 @@
     <!-- Scans within the base package of the application for @Components to configure as beans -->
     <context:component-scan base-package="ie.cit.cloud" />
 
-	
-	
-
-    		
-
-
-
-    <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+   <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
     <mvc:default-servlet-handler /> 
 
     <!-- Enables the Spring MVC @Controller programming model -->
 
-	<mvc:annotation-driven/>
-	<!-- 
-	<mvc:annotation-driven>
-	  <mvc:message-converters register-defaults="false">
-   			<bean class="org.springframework.http.converter.xml.Jaxb2RootElementHttpMessageConverter" />    			
-  			<bean class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter" />
-   	</mvc:message-converters>
-  </mvc:annotation-driven>
- -->
-
-
-  
+	<mvc:annotation-driven />
 </beans>

@@ -31,20 +31,12 @@ public class amqpMessageAggregator {
  
  protected static Logger logger = Logger.getLogger("integration");
  
- /*
+
+ 
 
  @SuppressWarnings("unchecked")
 		
- public messageSend (SalesTransactionRequest ) {
-  logger.debug("Total messages to send: " + reqlist.size()); 
-   
-  SalesTransactionResponse request = new SalesTransactionResponse();
-	Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transationBasket)
-     return message;
- }
 
- */
- 
  public boolean release(List<Message<?>> messages) {
   logger.debug("Message size: " + messages.size());
   logger.debug("Sequence size: " + messages.get(0).getHeaders().getSequenceSize());
@@ -61,4 +53,6 @@ public class amqpMessageAggregator {
   logger.debug("Correlate by: " + message.getHeaders().getCorrelationId().toString());
   return message.getHeaders().getCorrelationId().toString();
  }
+ 
 }
+ 

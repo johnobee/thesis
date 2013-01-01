@@ -14,59 +14,29 @@
 	xmlns:cloud="http://schema.cloudfoundry.org/spring"
 	xmlns:int-event="http://www.springframework.org/schema/integration/event"
 	xsi:schemaLocation="http://www.springframework.org/schema/integration/amqp http://www.springframework.org/schema/integration/amqp/spring-integration-amqp.xsd
-		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration-2.1.xsd
+		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/ws http://www.springframework.org/schema/integration/ws/spring-integration-ws.xsd
 		http://www.springframework.org/schema/integration/stream http://www.springframework.org/schema/integration/stream/spring-integration-stream.xsd
 		http://www.springframework.org/schema/rabbit http://www.springframework.org/schema/rabbit/spring-rabbit.xsd
-		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
-		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm-3.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm.xsd
 	    http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd
-	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd
-	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.2.xsd
+	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
 	    http://schema.cloudfoundry.org/spring http://schema.cloudfoundry.org/spring/cloudfoundry-spring.xsd
-	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event-2.1.xsd">
+	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event.xsd">
 	    
 
 	<context:component-scan base-package="ie.cit.cloud.mvc" />
-
+	
+	
 	<!-- infrastructure setup -->
-	<bean id="jsonMessageConverter" class="org.springframework.amqp.support.converter.JsonMessageConverter"/>
-	<bean id="xmlMessageConverter" class="org.springframework.amqp.support.converter.SerializerMessageConverter"/>
-<!-- 
-<bean id="marhsallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter"/>
- -->
-
-<!-- 
-	<bean id="messageConverter" class="org.springframework.amqp.support.converter.SimpleMessageConverter">
-	    <property name="messageConverter">
-	        <map>
-	            <entry key="application/json" value-ref="jsonMessageConverter"/>
-	            <entry key="application/xml" value-ref="textMessageConverter"/>
-	        </map>
-	    </property>
-	    <property name="fallbackConverter" ref="xmlMessageConverter"/>
-	</bean>
-	-->
-	<!-- 
-	<bean id="MarshallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter" 
- -->
-<!-- 
-message-converter="jsonMessageConverter"
-message-converter="MarshallingMessageConverter"
 
 
- <bean id="template" class="org.springframework.amqp.rabbit.core.RabbitTemplate"> 
- 		<property name="connectionfactory" ref="rabbitConnFactory" /> 
-        <property name="routingKey" value="test.queue"/> 
-        <property name="queue" value="junitqueue"/> 
-        <property name="messageConverter" ref="messageConverter" /> 
-</bean> 
-  -->
 
  	<rabbit:connection-factory id="connectionFactory" />
 		<rabbit:template id="amqpTemplate" 
-		routing-key=""
 		connection-factory="connectionFactory" />
 	
 		<rabbit:admin connection-factory="connectionFactory" />
@@ -95,69 +65,160 @@ message-converter="MarshallingMessageConverter"
 	<int:annotation-config/>
 	
 	<!-- sending messages -->
-	<int:channel id="toRabbit" />
-	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
+	<int:channel id="toRabbit"></int:channel>
+	<int-amqp:outbound-channel-adapter id="amqp-outbound-adapter" amqp-template="amqpTemplate"
 		exchange-name="epos.main.exchange.fanout" channel="toRabbit"
 		routing-key="epos.main.exchange.fanout"
-		mapped-request-headers="*" 
+		mapped-request-headers="message_*, __*, amqp_*" 
 		/>
-
+		
 	<!-- sending messages -->
 	<int:channel id="toLogChannel" />
 	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
 		exchange-name="epos.direct.exchange.log" channel="toLogChannel"
-		mapped-request-headers="message_*" />
+		mapped-request-headers="message_*, __*, amqp_*" />
 
-	<!-- receiving messages from loyalty queue -->
-	<int:channel id="fromRabbit.epos.loyalty"/>
+
+<!-- 
+***
+*** END OF AMQP SETUP
+***
+ -->
+ 
+ 
+ 
+ 
+ 
+ <!-- 
+***
+*** THE FOLLOWING SECTION CONFIGURES THE MARSHELLERS REQUIRED FOR THE MESSAGING 
+*** INFRASTRUCTURE AND THEN LEADS INTO THE THE 3RD PARTY WEB SERVICE CALLS
+***
+ -->
+
+
+	<!-- Receiving messages from queues 
+		These are then passed to a SI outbound web service adapter
+		Before this can happen however, they need to be converted
+		form Text to a Java object (handled by marshallingMessageConverter)
+		This can simply be repeated for each Outbound Webservice as required
+		thus making the application very scalable
+	-->
+	 <bean id="marshallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter">
+	 		<property name="marshaller" ref="marshaller" />
+	 		<property name="unmarshaller" ref="marshaller" />
+	 </bean>
+	 <!-- access web service using spring integration -->
+	 <!-- The JAXB elements to the can either scan the entire path such as : contextPath="ie.cit.cloud.pointofsale"
+		OR 
+		specify the individual classes to be bound
+		<oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.SalesTransactionRequest"/>
+	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.LoyaltyResponse"/>
+	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.CreditcardResponse"/>
+	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.VoucherResponse"/>
+	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.PromotionResponse"/>
+		 -->
+	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud.pointofsale"> 
+	</oxm:jaxb2-marshaller>
+
+<!-- 
+***
+*** CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
+*** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
+***
+ -->
+	<!-- 
+	Access messages from the Fanout Exchange using and AMQP inbound adapter
+	This message is then passed to the outbound LOYALTY WS adapter
+	 -->
+
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_loyalty_adapter"
-	channel="fromRabbit_loyalty" 
+	channel="fromRabbit_loyalty"
 	queue-names="epos.loyalty" 
-	connection-factory="connectionFactory"   
-	mapped-request-headers="*"	
+	connection-factory="connectionFactory"  
+	mapped-request-headers="message_*, __*, amqp_*"	
+	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
-	message-converter="jsonMessageConverter" 
 	/>
-		
-	<!-- receiving messages from queue and send to channel-->
-	<!--
-	
-	MarshallingMessageConverter
-	http://static.springsource.org/spring-integration/reference/html/amqp.html 
-	 -->
-<!-- 
-	<int:channel id="fromRabbit.epos.creditcard"/>
-	<int-amqp:inbound-channel-adapter 
-	id="fromRabbit_creditcard_adapter"
-	channel="aggregateChannel" 
-	queue-names="epos.creditcard" 
-	connection-factory="connectionFactory" 
-	error-channel="eventErrorChannel"
-	mapped-request-headers="*"	 
-	/>
-	
-	
-		
-	 -->
-	 
-	 <!-- 
-	 <int:payload-serializing-transformer input-channel="objectsIn" output-channel="bytesOut"/>
-
- <int:payload-deserializing-transformer input-channel="bytesIn" output-channel="objectsOut"/>
-	  -->
-	 <int:object-to-json-transformer input-channel="toRabbit"/>
 	<int:channel id="fromRabbit_loyalty"/>
 	<int-ws:outbound-gateway id="loyaltyGateway"
 		request-channel="fromRabbit_loyalty"
-		reply-channel="output" 
+		reply-channel="aggregateChannel"
 		uri="http://loyalty.cloudfoundry.com/loyalty/baskets"
 		marshaller="marshaller"
 		unmarshaller="marshaller"
-		/>
+	/>
 		
-	
 	<!-- 
+	Access messages from the Fanout Exchange using and AMQP inbound adapter
+	This message is then passed to the credit card outbound WS adapter
+	 -->
+	<int-amqp:inbound-channel-adapter 
+	id="fromRabbit_creditcard_adapter"
+	channel="fromRabbit_creditcard"
+	queue-names="epos.creditcard" 
+	connection-factory="connectionFactory"  
+	mapped-request-headers="message_*, __*, amqp_*"	
+	message-converter="marshallingMessageConverter"
+	error-channel="eventErrorChannel"
+	/>
+	<int:channel id="fromRabbit_creditcard"/>
+	<int-ws:outbound-gateway id="creditcardGateway"
+		request-channel="fromRabbit_creditcard"
+		reply-channel="aggregateChannel"
+		uri="http://creditcard.cloudfoundry.com/creditcard/baskets"
+		marshaller="marshaller"
+		unmarshaller="marshaller"
+	/>
+	<!-- 
+	Access messages from the Fanout Exchange using and AMQP inbound adapter
+	This message is then passed to the outbound WS adapter
+	 -->
+	<int-amqp:inbound-channel-adapter 
+	id="fromRabbit_promotion_adapter"
+	channel="fromRabbit_promotion"
+	queue-names="epos.promotion" 
+	connection-factory="connectionFactory"  
+	mapped-request-headers="message_*, __*, amqp_*"	
+	message-converter="marshallingMessageConverter"
+	error-channel="eventErrorChannel"
+	/>
+	<int:channel id="fromRabbit_promotion"/>
+	<int-ws:outbound-gateway id="promotionGateway"
+		request-channel="fromRabbit_promotion"
+		reply-channel="aggregateChannel"
+		uri="http://promotion.cloudfoundry.com/promotion/baskets"
+		marshaller="marshaller"
+		unmarshaller="marshaller"
+	/>
+	
+		<!-- 
+	Access messages from the Fanout Exchange using and AMQP inbound adapter
+	This message is then passed to the outbound WS adapter
+		<int:channel id="fromRabbit.epos.voucher"/>
+		
+	 -->
+
+	<int-amqp:inbound-channel-adapter 
+	id="fromRabbit_voucher_adapter"
+	channel="fromRabbit_voucher"
+	queue-names="epos.voucher" 
+	connection-factory="connectionFactory"  
+	mapped-request-headers="message_*, __*, amqp_*"	
+	message-converter="marshallingMessageConverter"
+	error-channel="eventErrorChannel"
+	/>
+	<int:channel id="fromRabbit_voucher"/>
+	<int-ws:outbound-gateway id="voucherGateway"
+		request-channel="fromRabbit_voucher"
+		reply-channel="aggregateChannel"
+		uri="http://voucher.cloudfoundry.com/voucher/baskets"
+		marshaller="marshaller"
+		unmarshaller="marshaller"
+	/>
+
+<!-- 
 	**** AGGREGATOR CHANNEL WILL GO HERE ****
 		EXAMPLE from KRAMS
 		<aggregator input-channel="aggregateChannel"
@@ -176,16 +237,25 @@ message-converter="MarshallingMessageConverter"
 		  
 		  release-strategy-expression="size() == 2"
 		
-	
+ -->	
 	  <bean id="amqpMessageAggregator" class="ie.cit.cloud.mvc.service.amqp.amqpMessageAggregator" />
-	<int:channel id="aggregateChannel"></int:channel>
+	<int:channel id="aggregateChannel"/>
 	<int:aggregator input-channel="aggregateChannel"
-		  output-channel="output" ref="amqpMessageAggregator" 
+		  output-channel="output" 
+		  correlation-strategy="amqpMessageAggregator" correlation-strategy-method="correlate"
 		  release-strategy="amqpMessageAggregator" release-strategy-method="release"
 		  release-strategy-expression="size() == 2"
+		  send-partial-result-on-expiry="true"
 		 />
+
+	 
+	
+<!-- 
+***
+*** END OF CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
+*** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
+***
  -->
-	  
 	
 	
 	 <!-- 
@@ -229,6 +299,9 @@ message-converter="MarshallingMessageConverter"
 		Should be able to configure this to 
 	-->
 	
+	
+	
+
  
 	<int-event:inbound-channel-adapter channel="eventChannel" 
 								 error-channel="eventErrorChannel"
@@ -241,18 +314,7 @@ message-converter="MarshallingMessageConverter"
 				***********
 	 -->
 	
-	<!-- 
-		This is an example of a captured event
-		ServletRequestHandledEvent: url=[/pointofsale/amqp/1]; 
-		client=[127.0.0.1]; method=[POST]; 
-		servlet=[appServlet]; session=[null]; 
-		user=[null]; time=[375ms];status=[OK]
-		
-		 lo_message_controller_time varchar(250), lo_message_controller_url
- 	-->
- 	
- 	
-  	<int-jdbc:outbound-channel-adapter
+	  	<int-jdbc:outbound-channel-adapter
 				id="jdbc-EventoutboundChannelAdapter"
 				query="insert into lot_lu_loadtest_logger (
 					    lo_message_start_time,
@@ -275,45 +337,6 @@ message-converter="MarshallingMessageConverter"
 		    </property>
 		</bean>
 
-<!-- 
-	
-+<bean id="spelSource" 	
-+      class="o.s.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">	
-+    <property name="parameterExpressions">
-+        <map>	
-+            <entry key="id"          value="headers['id'].toString()"/>
-+            <entry key="createdDate" value="new java.util.Date()"/>
-+            <entry key="payload"     value="payload"/>
-+        </map>	
-+    </property>
- -->
-		
-
-
-
-		
-			<!-- 
-			* out bound adapter.
-			*/
-			-->
-			<!--
-			<int-jdbc:outbound-channel-adapter
-			id="jdbc-AMQPoutboundChannelAdapter"
-			query="insert into lot_lu_loadtest_logger (
-				    lo_message_start_time, 
-				    lo_message_test_id, 
-				    lo_message_channel, 
-				    lo_message_service,
-				    lo_message_timestamp)
-   		values (:headers[timestamp],
-   				:headers[message_test_id],
-   				:headers[message_source], 
-   				:headers[message_service], 
-   				:createdDate)"
-			data-source="dataSource" channel="fromRabbit_"
-			sql-parameter-source-factory="spelSource" />
-			
-				 -->
 		<int-jdbc:outbound-channel-adapter
 		id="jdbc-WSoutboundChannelAdapter"
 		query="insert into lot_lu_loadtest_logger (
@@ -344,8 +367,7 @@ message-converter="MarshallingMessageConverter"
     			:headers[message_service], 
     			'test12')"
 		data-source="dataSource" 
-		request-channel="fromRabbit.epos.loyalty, fromRabbit.epos.creditcard" 
-		reply-channel="output"
+		request-channel="fromRabbit_voucher, fromRabbit_creditcard, fromRabbit_promotion, fromRabbit_loyalty" 
 		/>
 		
 
@@ -361,9 +383,7 @@ message-converter="MarshallingMessageConverter"
 		SET OF Consoler Out Adapter for testing etc
 	*******************************  --> 
 		
-	<!--
-	  <int-stream:stdout-channel-adapter id="consoleOutTest" channel="fromRabbit" append-newline="true" />
-	-->
+	
  <!-- *********************************** 
 		End of Console-Out Adapter for testing etc 
 	***********************************  --> 
@@ -376,18 +396,9 @@ message-converter="MarshallingMessageConverter"
  
 	<!-- Setup of Web Service through Spring Integration -->
 	
-	<!-- access web service using spring integration -->
-	<!-- Need to work this section out as need to write the JAXB elements to the 
-		CloudFoundry Webservices -->
-	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud.pointofsale" /> 
+
 	<int:channel id="input" />
 	<int:channel id="output" />
-	
-	<int-stream:stdout-channel-adapter
-		id="consoleOutEvent" 
-		channel="eventChannel" 
-		append-newline="true" 
-	/>
 	
 	<int-stream:stdout-channel-adapter
 		id="consoleInput" 
@@ -399,11 +410,14 @@ message-converter="MarshallingMessageConverter"
 		channel="output" 
 		append-newline="true" 
 	/>
-		<int-stream:stdout-channel-adapter
-		id="consoleOutEventError" 
+	
+	<int-stream:stdout-channel-adapter
+		id="consoleOutPutEvent" 
 		channel="eventErrorChannel" 
 		append-newline="true" 
 	/>
+	
+	
 	 
 
 <!--##############################################-->
@@ -422,6 +436,12 @@ message-converter="MarshallingMessageConverter"
  -->
 <!--  ****** Cloudfoundry Config CONFIG ***** -->
 
+
+<!--##############################################-->
+<!-- This si the seciotn message routing to OpenEx. -->
+<!--##############################################-->
+
+
 	<int-ws:outbound-gateway id="marshallingGateway"
 		request-channel="input"
 		reply-channel="output" 
@@ -429,6 +449,8 @@ message-converter="MarshallingMessageConverter"
 		marshaller="marshaller"
 		unmarshaller="marshaller"
 		>
+		<!--  Very useful feature in Spring Integraiton as it allows for the 
+			interrogation of messages headers/payload using Spring Expression Language -->
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
 		
