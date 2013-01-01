@@ -50,9 +50,9 @@
 	<rabbit:fanout-exchange name="epos.main.exchange.fanout">
 		<rabbit:bindings>
 			<rabbit:binding queue="epos.loyalty"  />
-			<rabbit:binding queue="epos.creditcard"  />
+		<!-- <rabbit:binding queue="epos.creditcard"  />
 			<rabbit:binding queue="epos.promotion"  />
-			<rabbit:binding queue="epos.voucher"  />
+			<rabbit:binding queue="epos.voucher"  />  -->
 		</rabbit:bindings>
 	</rabbit:fanout-exchange>
 	
@@ -108,6 +108,9 @@
 	 		<property name="marshaller" ref="marshaller" />
 	 		<property name="unmarshaller" ref="marshaller" />
 	 </bean>
+	 
+	 <oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud.pointofsale"> 
+	</oxm:jaxb2-marshaller>
 	 <!-- access web service using spring integration -->
 	 <!-- The JAXB elements to the can either scan the entire path such as : contextPath="ie.cit.cloud.pointofsale"
 		OR 
@@ -118,8 +121,7 @@
 	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.VoucherResponse"/>
 	    <oxm:class-to-be-bound name="ie.cit.cloud.pointofsale.PromotionResponse"/>
 		 -->
-	<oxm:jaxb2-marshaller id="marshaller" contextPath="ie.cit.cloud.pointofsale"> 
-	</oxm:jaxb2-marshaller>
+
 
 <!-- 
 ***
@@ -143,12 +145,20 @@
 	/>
 	<int:channel id="fromRabbit_loyalty"/>
 	<int-ws:outbound-gateway id="loyaltyGateway"
+		uri="http://loyalty.cloudfoundry.com/loyalty/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_loyalty"
-		reply-channel="aggregateChannel"
-		uri="http://loyalty.cloudfoundry.com/loyalty/baskets"
-		marshaller="marshaller"
-		unmarshaller="marshaller"
-	/>
+		reply-channel="fromLoyaltyWS"
+	/> 
+	 <!-- <int:object-to-string-transformer input-channel="in" output-channel="out"/>-->
+	<int:channel id="fromLoyaltyWS"></int:channel>
+	<int:object-to-json-transformer input-channel="fromLoyaltyWS" output-channel="aggregateChannel">
+	</int:object-to-json-transformer>
+	 <int-stream:stdout-channel-adapter id="replyChannel" append-newline="true" />
+	
+
+ <!--  reply-channel="aggregateChannel"-->
+		
+
 		
 	<!-- 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
@@ -165,12 +175,15 @@
 	/>
 	<int:channel id="fromRabbit_creditcard"/>
 	<int-ws:outbound-gateway id="creditcardGateway"
+		uri="http://creditcard.cloudfoundry.com/creditcard/baskets" marshaller="marshaller" 
 		request-channel="fromRabbit_creditcard"
-		reply-channel="aggregateChannel"
-		uri="http://creditcard.cloudfoundry.com/creditcard/baskets"
-		marshaller="marshaller"
-		unmarshaller="marshaller"
-	/>
+		reply-channel="fromCreditcardWS" 
+	/> 
+	 <!-- <int:object-to-string-transformer input-channel="in" output-channel="out"/>-->
+	<int:channel id="fromCreditcardWS"></int:channel>
+	<int:object-to-json-transformer input-channel="fromCreditcardWS" output-channel="aggregateChannel">
+	</int:object-to-json-transformer>
+	
 	<!-- 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
 	This message is then passed to the outbound WS adapter
@@ -186,12 +199,10 @@
 	/>
 	<int:channel id="fromRabbit_promotion"/>
 	<int-ws:outbound-gateway id="promotionGateway"
+		uri="http://promotion.cloudfoundry.com/promotion/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_promotion"
-		reply-channel="aggregateChannel"
-		uri="http://promotion.cloudfoundry.com/promotion/baskets"
-		marshaller="marshaller"
-		unmarshaller="marshaller"
-	/>
+		reply-channel="replyChannel" 
+	/> 
 	
 		<!-- 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
@@ -211,13 +222,11 @@
 	/>
 	<int:channel id="fromRabbit_voucher"/>
 	<int-ws:outbound-gateway id="voucherGateway"
+		uri="http://voucher.cloudfoundry.com/voucher/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_voucher"
-		reply-channel="aggregateChannel"
-		uri="http://voucher.cloudfoundry.com/voucher/baskets"
-		marshaller="marshaller"
-		unmarshaller="marshaller"
-	/>
-
+		reply-channel="replyChannel" 
+	/> 
+	 
 <!-- 
 	**** AGGREGATOR CHANNEL WILL GO HERE ****
 		EXAMPLE from KRAMS
@@ -241,17 +250,20 @@
 	  <bean id="amqpMessageAggregator" class="ie.cit.cloud.mvc.service.amqp.amqpMessageAggregator" />
 	<int:channel id="aggregateChannel"/>
 	<int:aggregator input-channel="aggregateChannel"
-		  output-channel="output" 
-		  correlation-strategy="amqpMessageAggregator" correlation-strategy-method="correlate"
-		  release-strategy="amqpMessageAggregator" release-strategy-method="release"
-		  release-strategy-expression="size() == 2"
+		  output-channel="aggregateChannelOutput" 
+		  correlation-strategy-expression="headers['amqp_receivedRoutingKey']"
+		  release-strategy-expression="size() gt 1"
 		  send-partial-result-on-expiry="true"
+		  send-timeout="1000"
 		 />
 
-	 
+	 	 <int-stream:stdout-channel-adapter id="aggregateChannelOutput" append-newline="true" />
 	
 <!-- 
-***
+***size()
+*** 		
+		 release-strategy-expression="payload.size() eq 2"
+		correlation-strategy-expression="headers[id]"
 *** END OF CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
 *** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
 ***
@@ -313,20 +325,20 @@
 				AT VARIOUS HOPS IN THE ROUTE 
 				***********
 	 -->
-	
-	  	<int-jdbc:outbound-channel-adapter
-				id="jdbc-EventoutboundChannelAdapter"
-				query="insert into lot_lu_loadtest_logger (
+
+	<int-jdbc:outbound-channel-adapter
+		id="jdbc-EventoutboundChannelAdapter"
+		query="insert into lot_lu_loadtest_logger (
 					    lo_message_start_time,
 					    lo_message_controller_url,
 					    lo_message_controller_time)
 		    	values (:headers[timestamp],
 		    			:url,
 		    			:time)"
-		    	data-source="dataSource" channel="eventChannel"
-				sql-parameter-source-factory="spelSource" />
+		data-source="dataSource" channel="eventChannel"
+		sql-parameter-source-factory="spelSource" />
 
-		<bean id="spelSource"
+	<bean id="spelSource"
 		      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
 		    <property name="parameterExpressions">
 		        <map>
