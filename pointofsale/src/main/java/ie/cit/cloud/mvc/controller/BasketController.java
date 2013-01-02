@@ -174,14 +174,14 @@ public class BasketController {
 
 	@RequestMapping(value = "/ws/{testid}", 
 					method = RequestMethod.POST, 
-					headers="Accept=text/xml, application/xml")
+					headers="Accept=text/xml, application/xml, text/plain")
 	@ResponseStatus(value = HttpStatus.OK)
 	public void registerBasketWS(
-			@RequestBody String transactionBasket, 
+			@RequestBody SalesTransactionRequest transactionBasket, 
 			@PathVariable("testid") String testid)
 	{
 			
-		Message<String> message = MessageBuilder.withPayload(transactionBasket)
+		Message<SalesTransactionRequest> message = MessageBuilder.withPayload(transactionBasket)
 		        .setHeader("message_source", "WS")
 		        .setHeader("message_service", "loyalty")
 		        .setHeader("message_test_id", testid)

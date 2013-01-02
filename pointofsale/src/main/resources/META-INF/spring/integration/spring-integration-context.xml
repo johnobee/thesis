@@ -44,23 +44,19 @@
 		<rabbit:queue name="epos.creditcard" />
 		<rabbit:queue name="epos.promotion" />
 		<rabbit:queue name="epos.voucher" />
-		<rabbit:queue name="epos.backup.log" />
+
 	
 	<!-- setup exchange/queue infrastructure, simple binding without routing key -->
 	<rabbit:fanout-exchange name="epos.main.exchange.fanout">
 		<rabbit:bindings>
 			<rabbit:binding queue="epos.loyalty"  />
-		<!-- <rabbit:binding queue="epos.creditcard"  />
+			 <rabbit:binding queue="epos.creditcard"  />
 			<rabbit:binding queue="epos.promotion"  />
-			<rabbit:binding queue="epos.voucher"  />  -->
+			<rabbit:binding queue="epos.voucher"  />  
 		</rabbit:bindings>
 	</rabbit:fanout-exchange>
 	
-	<rabbit:direct-exchange name="epos.direct.exchange.log">
-			<rabbit:bindings>
-				<rabbit:binding queue="epos.backup.log"  />
-			</rabbit:bindings>
-	</rabbit:direct-exchange>
+
 
 	<int:annotation-config/>
 	
@@ -72,11 +68,7 @@
 		mapped-request-headers="message_*, __*, amqp_*" 
 		/>
 		
-	<!-- sending messages -->
-	<int:channel id="toLogChannel" />
-	<int-amqp:outbound-channel-adapter amqp-template="amqpTemplate"
-		exchange-name="epos.direct.exchange.log" channel="toLogChannel"
-		mapped-request-headers="message_*, __*, amqp_*" />
+
 
 
 <!-- 
@@ -134,9 +126,8 @@
 	This message is then passed to the outbound LOYALTY WS adapter
 	 -->
 
-	<int-amqp:inbound-channel-adapter 
-	id="fromRabbit_loyalty_adapter"
-	channel="fromRabbit_loyalty"
+	<int-amqp:inbound-channel-adapter id="fromRabbit_loyalty_adapter"
+	channel="fromRabbit_loyalty" 
 	queue-names="epos.loyalty" 
 	connection-factory="connectionFactory"  
 	mapped-request-headers="message_*, __*, amqp_*"	
@@ -148,16 +139,19 @@
 		uri="http://loyalty.cloudfoundry.com/loyalty/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_loyalty"
 		reply-channel="fromLoyaltyWS"
-	/> 
-	 <!-- <int:object-to-string-transformer input-channel="in" output-channel="out"/>-->
-	<int:channel id="fromLoyaltyWS"></int:channel>
-	<int:object-to-json-transformer input-channel="fromLoyaltyWS" output-channel="aggregateChannel">
-	</int:object-to-json-transformer>
-	 <int-stream:stdout-channel-adapter id="replyChannel" append-newline="true" />
-	
-
- <!--  reply-channel="aggregateChannel"-->
 		
+	/> 
+	<!-- Need to converter the object response from the Web Service Outbound adapter back 
+		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
+		from the original AMQP fan-out exhange headers and message conversion.
+	 -->
+	 
+	<int:channel id="fromLoyaltyWS" />
+	<int:object-to-json-transformer id="fromWSObjecttoJSON"
+	input-channel="fromLoyaltyWS" 
+	output-channel="aggregateChannel" />
+	
+	
 
 		
 	<!-- 
@@ -179,10 +173,14 @@
 		request-channel="fromRabbit_creditcard"
 		reply-channel="fromCreditcardWS" 
 	/> 
-	 <!-- <int:object-to-string-transformer input-channel="in" output-channel="out"/>-->
-	<int:channel id="fromCreditcardWS"></int:channel>
-	<int:object-to-json-transformer input-channel="fromCreditcardWS" output-channel="aggregateChannel">
-	</int:object-to-json-transformer>
+	<!-- Need to converter the object response from the Web Service Outbound adapter back 
+		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
+		from the original AMQP fan-out exchange headers and message conversion.
+	 -->
+	<int:channel id="fromCreditcardWS" />
+	<int:object-to-json-transformer 
+	input-channel="fromCreditcardWS" 
+	output-channel="aggregateChannel" />
 	
 	<!-- 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
@@ -201,8 +199,16 @@
 	<int-ws:outbound-gateway id="promotionGateway"
 		uri="http://promotion.cloudfoundry.com/promotion/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_promotion"
-		reply-channel="replyChannel" 
+		reply-channel="fromPromotionWS" 
 	/> 
+	<!-- Need to converter the object response from the Web Service Outbound adapter back 
+		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
+		from the original AMQP fan-out exchange headers and message conversion.
+	 -->
+			<int:channel id="fromPromotionWS" />
+			<int:object-to-json-transformer 
+			input-channel="fromPromotionWS" 
+			output-channel="aggregateChannel" />
 	
 		<!-- 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
@@ -224,60 +230,44 @@
 	<int-ws:outbound-gateway id="voucherGateway"
 		uri="http://voucher.cloudfoundry.com/voucher/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_voucher"
-		reply-channel="replyChannel" 
+		reply-channel="fromVoucherWS" 
 	/> 
+	<!-- Need to converter the object response from the Web Service Outbound adapter back 
+		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
+		from the original AMQP fan-out exchange headers and message conversion.
+	 -->
+			<int:channel id="fromVoucherWS" />
+			<int:object-to-json-transformer 
+			input-channel="fromVoucherWS" 
+			output-channel="aggregateChannel" />
+	
+	
+	
 	 
-<!-- 
-	**** AGGREGATOR CHANNEL WILL GO HERE ****
-		EXAMPLE from KRAMS
-		<aggregator input-channel="aggregateChannel"
-		  output-channel="wsChannel" ref="productAggregatorBean" method="send"
-		  release-strategy="productAggregatorBean" release-strategy-method="release"
-		  correlation-strategy="productAggregatorBean" correlation-strategy-method="correlate"
-		  send-partial-result-on-expiry="false" />
-		  	
-		  <beans:bean id="productAggregatorBean" class="org.krams.tutorial.si.ProductAggregator" />
-		
-			<int:aggregator input-channel="aggregateChannel"
-		  output-channel="output" ref="amqpMessageAggregator" method="send"
-		  release-strategy="amqpMessageAggregator" release-strategy-method="release"
-		  correlation-strategy="amqpMessageAggregator" correlation-strategy-method="correlate"
-		  send-partial-result-on-expiry="false" />
-		  
-		  release-strategy-expression="size() == 2"
-		
- -->	
-	  <bean id="amqpMessageAggregator" class="ie.cit.cloud.mvc.service.amqp.amqpMessageAggregator" />
 	<int:channel id="aggregateChannel"/>
 	<int:aggregator input-channel="aggregateChannel"
 		  output-channel="aggregateChannelOutput" 
 		  correlation-strategy-expression="headers['amqp_receivedRoutingKey']"
-		  release-strategy-expression="size() gt 1"
+		  release-strategy-expression="size() > 3"
 		  send-partial-result-on-expiry="true"
-		  send-timeout="1000"
+		  send-timeout="5000"
 		 />
-
-	 	 <int-stream:stdout-channel-adapter id="aggregateChannelOutput" append-newline="true" />
+		 
+		 <!-- Simple call to outbound JDBC adapter to log the point at which all WebServices are
+		 released by the aggregator pattern -->
+		 
+		<int:publish-subscribe-channel id="aggregateChannelOutput"/>
+	 	<int-stream:stdout-channel-adapter id="aggregatestdOutput" channel="aggregateChannelOutput" append-newline="true" />
 	
 <!-- 
-***size()
+***
 *** 		
-		 release-strategy-expression="payload.size() eq 2"
-		correlation-strategy-expression="headers[id]"
 *** END OF CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
 *** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
 ***
  -->
 	
 	
-	 <!-- 
-	 *********************************** 
-		 using the Service activator as the 'client for the 
-		 what we will be testing is the response time of all service's  being call back at the same time versus the
-		 sequential nature of the ws outbound adapter.
-		 1 message processed by multiple services in paralell as apposed to sequentially by the webservice
-		***********************************  
-		--> 
 	
     
     
@@ -306,13 +296,11 @@
 			<property name="password" value="${jdbc.password}" />
 	</bean>
 	
-	<!-- ******************************* -->
-	<!-- Configure a SI outbound adpater to log each message time 
-		Should be able to configure this to 
-	-->
-	
-	
-	
+
+	<!-- ****** CONFIGURE SOME SPEL EXPRESSIONS TO TRACK TIMES 
+				AT VARIOUS HOPS IN THE ROUTE 
+				***********
+	 -->
 
  
 	<int-event:inbound-channel-adapter channel="eventChannel" 
@@ -320,11 +308,11 @@
 								event-types="org.springframework.web.context.support.ServletRequestHandledEvent"/> 
      <int:publish-subscribe-channel id="eventChannel"/>
      <int:channel id="eventErrorChannel"></int:channel>
-
-	<!-- ****** CONFIGURE SOME SPEL EXPRESSIONS TO TRACK TIMES 
-				AT VARIOUS HOPS IN THE ROUTE 
-				***********
-	 -->
+<int-stream:stdout-channel-adapter
+		id="consoleOutPutEvent" 
+		channel="eventErrorChannel" 
+		append-newline="true" 
+	/>
 
 	<int-jdbc:outbound-channel-adapter
 		id="jdbc-EventoutboundChannelAdapter"
@@ -379,7 +367,7 @@
     			:headers[message_service], 
     			'test12')"
 		data-source="dataSource" 
-		request-channel="fromRabbit_voucher, fromRabbit_creditcard, fromRabbit_promotion, fromRabbit_loyalty" 
+		request-channel="aggregateChannelOutput" 
 		/>
 		
 
@@ -412,22 +400,20 @@
 	<int:channel id="input" />
 	<int:channel id="output" />
 	
+	<!-- 
 	<int-stream:stdout-channel-adapter
 		id="consoleInput" 
 		channel="input" 
 		append-newline="true" 
 	/>
+	
 	<int-stream:stdout-channel-adapter
 		id="consoleOutPutEvent" 
 		channel="output" 
 		append-newline="true" 
 	/>
+	-->
 	
-	<int-stream:stdout-channel-adapter
-		id="consoleOutPutEvent" 
-		channel="eventErrorChannel" 
-		append-newline="true" 
-	/>
 	
 	
 	 
@@ -452,6 +438,8 @@
 <!--##############################################-->
 <!-- This si the seciotn message routing to OpenEx. -->
 <!--##############################################-->
+
+
 
 
 	<int-ws:outbound-gateway id="marshallingGateway"

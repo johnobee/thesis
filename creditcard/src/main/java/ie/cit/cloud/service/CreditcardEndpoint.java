@@ -1,6 +1,7 @@
 package ie.cit.cloud.service;
 
 import ie.cit.cloud.pointofsale.CreditcardResponse;
+import ie.cit.cloud.pointofsale.LoyaltyResponse;
 import ie.cit.cloud.pointofsale.SalesTransactionRequest;
 
 import org.springframework.ws.server.endpoint.annotation.Endpoint;
@@ -17,7 +18,10 @@ public class CreditcardEndpoint {
 	@ResponsePayload
 	public CreditcardResponse creditcardAuth(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);
-		return new CreditcardResponse();
+		//return new CreditcardResponse();
+		CreditcardResponse test = new CreditcardResponse();
+		test.setConfirmationNumber("123");
+		return test;
 	}
 }
 

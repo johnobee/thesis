@@ -1,5 +1,6 @@
 package ie.cit.cloud.service;
 
+import ie.cit.cloud.pointofsale.LoyaltyResponse;
 import ie.cit.cloud.pointofsale.VoucherResponse;
 import ie.cit.cloud.pointofsale.SalesTransactionRequest;
 
@@ -17,6 +18,9 @@ public class VoucherEndpoint {
 	@ResponsePayload
 	public VoucherResponse voucherReward(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);
-		return new VoucherResponse();
+		//return new VoucherResponse();
+		VoucherResponse test = new VoucherResponse();
+		test.setConfirmationNumber("123");
+		return test;
 	}
 }

@@ -1,4 +1,5 @@
 package ie.cit.cloud.service;
+import ie.cit.cloud.pointofsale.LoyaltyResponse;
 import ie.cit.cloud.pointofsale.PromotionResponse;
 import ie.cit.cloud.pointofsale.SalesTransactionRequest;
 
@@ -17,6 +18,9 @@ public class PromotionEndpoint {
 	@ResponsePayload
 	public PromotionResponse promotionAvailableReward(@RequestPayload SalesTransactionRequest request) {
 		System.out.println(request);
-		return new PromotionResponse();
+		//return new PromotionResponse();
+		PromotionResponse test = new PromotionResponse();
+		test.setConfirmationNumber("123");
+		return test;
 	}
 }

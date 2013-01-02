@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<salesTransactionRequest xmlns="http://cloud.cit.ie/pointofsale" targetNamespace="http://localhost:8080/loyalty/pointofsale">
+<SalesTransactionRequest xmlns="http://cloud.cit.ie/pointofsale" targetNamespace="http://localhost:8080/loyalty/pointofsale">
   <totalValue>22.50</totalValue>
   <storeID>12345</storeID>
   <transactionID>12345</transactionID>   
@@ -4003,4 +4003,4 @@
           <quantity>1</quantity>
           <price>10.90</price>
   </item>
-</salesTransactionRequest>
+</SalesTransactionRequest>
