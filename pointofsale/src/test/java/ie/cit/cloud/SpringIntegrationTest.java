@@ -24,13 +24,15 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class SpringIntegrationTest {
 
-    @SuppressWarnings("unused")
+	@SuppressWarnings("unused")
 	@Test
-    public void testSpringIntegrationContextStartup() throws Exception{
+	public void testSpringIntegrationContextStartup() throws Exception {
 
-        final ApplicationContext context = new ClassPathXmlApplicationContext("/META-INF/spring/integration/spring-integration-context.xml", SpringIntegrationTest.class);
-        Thread.sleep(4000);
+		final ApplicationContext context = new ClassPathXmlApplicationContext(
+				"/META-INF/spring/integration/spring-integration-context.xml",
+				SpringIntegrationTest.class);
+		Thread.sleep(4000);
 
-    }
+	}
 
 }

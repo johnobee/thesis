@@ -5,7 +5,6 @@
 // Generated on: 2012.12.28 at 03:57:28 PM GMT 
 //
 
-
 package ie.cit.cloud.pointofsale;
 
 import java.math.BigDecimal;
@@ -15,11 +14,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for anonymous complex type.
+ * <p>
+ * Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within
+ * this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -40,83 +41,74 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "LoyaltyResponse")
 public class LoyaltyResponse {
 
-    @XmlAttribute(name = "confirmationNumber")
-    protected String confirmationNumber;
-    @XmlAttribute(name = "loyaltyNumber")
-    protected String loyaltyNumber;
-    @XmlAttribute(name = "loyaltyValue")
-    protected BigDecimal loyaltyValue;
+	@XmlAttribute(name = "confirmationNumber")
+	protected String confirmationNumber;
+	@XmlAttribute(name = "loyaltyNumber")
+	protected String loyaltyNumber;
+	@XmlAttribute(name = "loyaltyValue")
+	protected BigDecimal loyaltyValue;
 
-    /**
-     * Gets the value of the confirmationNumber property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getConfirmationNumber() {
-        return confirmationNumber;
-    }
+	/**
+	 * Gets the value of the confirmationNumber property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getConfirmationNumber() {
+		return confirmationNumber;
+	}
 
-    /**
-     * Sets the value of the confirmationNumber property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setConfirmationNumber(String value) {
-        this.confirmationNumber = value;
-    }
+	/**
+	 * Sets the value of the confirmationNumber property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setConfirmationNumber(String value) {
+		this.confirmationNumber = value;
+	}
 
-    /**
-     * Gets the value of the loyaltyNumber property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getLoyaltyNumber() {
-        return loyaltyNumber;
-    }
+	/**
+	 * Gets the value of the loyaltyNumber property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getLoyaltyNumber() {
+		return loyaltyNumber;
+	}
 
-    /**
-     * Sets the value of the loyaltyNumber property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setLoyaltyNumber(String value) {
-        this.loyaltyNumber = value;
-    }
+	/**
+	 * Sets the value of the loyaltyNumber property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setLoyaltyNumber(String value) {
+		this.loyaltyNumber = value;
+	}
 
-    /**
-     * Gets the value of the loyaltyValue property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link BigDecimal }
-     *     
-     */
-    public BigDecimal getLoyaltyValue() {
-        return loyaltyValue;
-    }
+	/**
+	 * Gets the value of the loyaltyValue property.
+	 * 
+	 * @return possible object is {@link BigDecimal }
+	 * 
+	 */
+	public BigDecimal getLoyaltyValue() {
+		return loyaltyValue;
+	}
 
-    /**
-     * Sets the value of the loyaltyValue property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link BigDecimal }
-     *     
-     */
-    public void setLoyaltyValue(BigDecimal value) {
-        this.loyaltyValue = value;
-    }
+	/**
+	 * Sets the value of the loyaltyValue property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link BigDecimal }
+	 * 
+	 */
+	public void setLoyaltyValue(BigDecimal value) {
+		this.loyaltyValue = value;
+	}
 
 }

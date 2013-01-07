@@ -12,10 +12,20 @@
         http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
 
     <!-- Scans within the base package of the application for @Components to configure as beans -->
-    <context:component-scan base-package="ie.cit.cloud" />
+    <context:component-scan base-package="ie.cit.cloud.mvc" />
 
    <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
     <mvc:default-servlet-handler /> 
+    
+        <bean id="viewResolver"
+      	   class="org.springframework.web.servlet.view.InternalResourceViewResolver" >
+           <property name="prefix">
+              <value>/WEB-INF/jsp/</value>
+           </property>
+           <property name="suffix">
+              <value>.jsp</value>
+           </property>
+     </bean>
 
     <!-- Enables the Spring MVC @Controller programming model -->
 

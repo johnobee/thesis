@@ -22,80 +22,41 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
 		http://www.springframework.org/schema/oxm http://www.springframework.org/schema/oxm/spring-oxm.xsd
 	    http://www.springframework.org/schema/integration/jdbc http://www.springframework.org/schema/integration/jdbc/spring-integration-jdbc.xsd
-	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd
+	    http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.2.xsd
 	    http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
 	    http://schema.cloudfoundry.org/spring http://schema.cloudfoundry.org/spring/cloudfoundry-spring.xsd
 	    http://www.springframework.org/schema/integration/event http://www.springframework.org/schema/integration/event/spring-integration-event.xsd">
 	    
+	    
+	    
+	<import resource="jdbc-integration.xml"/>
+	<import resource="rabbit-integration.xml"/>
 
 	<context:component-scan base-package="ie.cit.cloud.mvc" />
-	
-	
-	<!-- infrastructure setup -->
-
-
-
- 	<rabbit:connection-factory id="connectionFactory" />
-		<rabbit:template id="amqpTemplate" 
-		connection-factory="connectionFactory" />
-	
-		<rabbit:admin connection-factory="connectionFactory" />
-		<rabbit:queue name="epos.loyalty"  />
-		<rabbit:queue name="epos.creditcard" />
-		<rabbit:queue name="epos.promotion" />
-		<rabbit:queue name="epos.voucher" />
-
-	
-	<!-- setup exchange/queue infrastructure, simple binding without routing key -->
-	<rabbit:fanout-exchange name="epos.main.exchange.fanout">
-		<rabbit:bindings>
-			<rabbit:binding queue="epos.loyalty"  />
-			 <rabbit:binding queue="epos.creditcard"  />
-			<rabbit:binding queue="epos.promotion"  />
-			<rabbit:binding queue="epos.voucher"  />  
-		</rabbit:bindings>
-	</rabbit:fanout-exchange>
-	
-
-
+		
 	<int:annotation-config/>
 	
+
 	<!-- sending messages -->
 	<int:channel id="toRabbit"></int:channel>
 	<int-amqp:outbound-channel-adapter id="amqp-outbound-adapter" amqp-template="amqpTemplate"
-		exchange-name="epos.main.exchange.fanout" channel="toRabbit"
-		routing-key="epos.main.exchange.fanout"
-		mapped-request-headers="message_*, __*, amqp_*" 
-		/>
-		
+	exchange-name="epos.main.exchange.fanout" channel="toRabbit" 
+	routing-key="epos.main.exchange.fanout"
+	mapped-request-headers="message_*, __*, amqp_*" 
+	/>
+	
+	<int:channel id="fromAMQP"/> 
+	<int-stream:stdout-channel-adapter id="consoleInput" 
+	channel="fromAMQP" 
+	append-newline="true" 
+	/>
 
 
+ <!--################################################	
+	 SET UP OF MARSHALLERS REQUIRED FOR THE MESSAGING 	
+	 INFRASTRUCTURE AND THEN LEADS INTO THE THE 3RD PARTY WEB SERVICE CALLS 
+ 	#################################################-->
 
-<!-- 
-***
-*** END OF AMQP SETUP
-***
- -->
- 
- 
- 
- 
- 
- <!-- 
-***
-*** THE FOLLOWING SECTION CONFIGURES THE MARSHELLERS REQUIRED FOR THE MESSAGING 
-*** INFRASTRUCTURE AND THEN LEADS INTO THE THE 3RD PARTY WEB SERVICE CALLS
-***
- -->
-
-
-	<!-- Receiving messages from queues 
-		These are then passed to a SI outbound web service adapter
-		Before this can happen however, they need to be converted
-		form Text to a Java object (handled by marshallingMessageConverter)
-		This can simply be repeated for each Outbound Webservice as required
-		thus making the application very scalable
-	-->
 	 <bean id="marshallingMessageConverter" class="org.springframework.amqp.support.converter.MarshallingMessageConverter">
 	 		<property name="marshaller" ref="marshaller" />
 	 		<property name="unmarshaller" ref="marshaller" />
@@ -115,13 +76,23 @@
 		 -->
 
 
-<!-- 
-***
-*** CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
-*** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
-***
- -->
-	<!-- 
+
+
+ <!--################################################
+	 SET UP OF AMQP ADAPTERS AND CHANNELS TO SUPPORT THE 
+	 VARRIOUS CALLS TO THE EXTERNAL WEBSERVICES 	
+	 INFRASTRUCTURE AND THEN LEADS INTO THE THE 3RD PARTY WEB SERVICE CALLS
+	 #################################################-->
+
+
+	<!-- Receiving messages from queues 
+		These are then passed to a SI outbound web service adapter
+		Before this can happen however, they need to be converted
+		form Text to a Java object (handled by marshallingMessageConverter)
+		This can simply be repeated for each Outbound Webservice as required
+		thus making the application very scalable
+
+
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
 	This message is then passed to the outbound LOYALTY WS adapter
 	 -->
@@ -134,7 +105,7 @@
 	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
 	/>
-	<int:channel id="fromRabbit_loyalty"/>
+	<int:publish-subscribe-channel id="fromRabbit_loyalty"/>
 	<int-ws:outbound-gateway id="loyaltyGateway"
 		uri="http://loyalty.cloudfoundry.com/loyalty/baskets" marshaller="marshaller" unmarshaller="marshaller"
 		request-channel="fromRabbit_loyalty"
@@ -147,7 +118,7 @@
 	 -->
 	 
 	<int:channel id="fromLoyaltyWS" />
-	<int:object-to-json-transformer id="fromWSObjecttoJSON"
+	<int:object-to-json-transformer id="fromLoyaltyWSObjecttoJSON"
 	input-channel="fromLoyaltyWS" 
 	output-channel="aggregateChannel" />
 	
@@ -178,7 +149,7 @@
 		from the original AMQP fan-out exchange headers and message conversion.
 	 -->
 	<int:channel id="fromCreditcardWS" />
-	<int:object-to-json-transformer 
+	<int:object-to-json-transformer id="fromCreditCardWSObjecttoJSON"
 	input-channel="fromCreditcardWS" 
 	output-channel="aggregateChannel" />
 	
@@ -186,6 +157,8 @@
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
 	This message is then passed to the outbound WS adapter
 	 -->
+	 
+	  
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_promotion_adapter"
 	channel="fromRabbit_promotion"
@@ -206,7 +179,7 @@
 		from the original AMQP fan-out exchange headers and message conversion.
 	 -->
 			<int:channel id="fromPromotionWS" />
-			<int:object-to-json-transformer 
+			<int:object-to-json-transformer id="fromPromotionWSObjecttoJSON"
 			input-channel="fromPromotionWS" 
 			output-channel="aggregateChannel" />
 	
@@ -236,106 +209,99 @@
 		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
 		from the original AMQP fan-out exchange headers and message conversion.
 	 -->
-			<int:channel id="fromVoucherWS" />
-			<int:object-to-json-transformer 
+			<int:publish-subscribe-channel id="fromVoucherWS" />
+			<int:object-to-json-transformer id="fromVoucherWSObjecttoJSON"
 			input-channel="fromVoucherWS" 
 			output-channel="aggregateChannel" />
 	
 	
-	
+<!--##############################################
+	 SET UP OF AGGREGATOR PATTERN
+	##############################################-->
 	 
 	<int:channel id="aggregateChannel"/>
 	<int:aggregator input-channel="aggregateChannel"
 		  output-channel="aggregateChannelOutput" 
+		  release-strategy-expression="size() == 4"
 		  correlation-strategy-expression="headers['amqp_receivedRoutingKey']"
-		  release-strategy-expression="size() > 3"
-		  send-partial-result-on-expiry="true"
-		  send-timeout="5000"
+		  send-partial-result-on-expiry="false"
+		  discard-channel="aggregateChannelOutput" 
+		  send-timeout="2000"
 		 />
 		 
 		 <!-- Simple call to outbound JDBC adapter to log the point at which all WebServices are
 		 released by the aggregator pattern -->
 		 
 		<int:publish-subscribe-channel id="aggregateChannelOutput"/>
-	 	<int-stream:stdout-channel-adapter id="aggregatestdOutput" channel="aggregateChannelOutput" append-newline="true" />
-	
-<!-- 
-***
-*** 		
-*** END OF CALLS TO EXTERNAL THIRD PARTY WEB SERVICES USING 
-*** SPRING INTEGRATION OUTBOUND WEB SERVICE ADAPTER
-***
- -->
-	
-	
-	
-    
-    
-    <!-- *********************************** 
-		 mySQL CONNECTION SETUP To Handle logging from
-		 the JDBC Out-bound Adapter.
-	***********************************  --> 
-	<!-- Initialise the mySQL db -->
-	<jdbc:initialize-database data-source="dataSource">
-		<jdbc:script location="classpath:META-INF/mysql/db-schema.sql" />
-	</jdbc:initialize-database>
- 	<!-- Assign the db props placeholder -->
- 	<bean 
- 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-		<property name="location" >
-				<value>classpath:META-INF/mysql/database.properties</value>  
-		</property>
-	</bean>
-	
-	<!-- Configure the datasource bean by wiring the db props into the data -->
-	<bean id="dataSource" 
-         class="org.springframework.jdbc.datasource.DriverManagerDataSource">
-			<property name="driverClassName" value="${jdbc.driverClassName}" />
-			<property name="url" value="${jdbc.url}" />
-			<property name="username" value="${jdbc.username}" />
-			<property name="password" value="${jdbc.password}" />
-	</bean>
+		<int-stream:stdout-channel-adapter id="aggregatestdOutput" channel="aggregateChannelOutput" append-newline="true" />
 	
 
-	<!-- ****** CONFIGURE SOME SPEL EXPRESSIONS TO TRACK TIMES 
-				AT VARIOUS HOPS IN THE ROUTE 
-				***********
-	 -->
-
- 
-	<int-event:inbound-channel-adapter channel="eventChannel" 
-								 error-channel="eventErrorChannel"
+	 	
+	 	
+	
+<!--##############################################
+	 SET UP OF EVENT CHANNEL TO LOG MVC CONTROLLER EVENT 
+	##############################################-->
+	
+	<int-event:inbound-channel-adapter 
+								channel="eventChannel" 
+								error-channel="eventErrorChannel"
 								event-types="org.springframework.web.context.support.ServletRequestHandledEvent"/> 
      <int:publish-subscribe-channel id="eventChannel"/>
      <int:channel id="eventErrorChannel"></int:channel>
-<int-stream:stdout-channel-adapter
+	 <int-stream:stdout-channel-adapter
 		id="consoleOutPutEvent" 
 		channel="eventErrorChannel" 
 		append-newline="true" 
-	/>
+	 />
 
 	<int-jdbc:outbound-channel-adapter
 		id="jdbc-EventoutboundChannelAdapter"
 		query="insert into lot_lu_loadtest_logger (
-					    lo_message_start_time,
-					    lo_message_controller_url,
-					    lo_message_controller_time)
-		    	values (:headers[timestamp],
-		    			:url,
-		    			:time)"
+				     	lo_message_start_time, 
+					    lo_message_test_id, 
+					    lo_message_channel, 
+					    lo_message_service,
+					    lo_message_timestamp,
+					    lo_message_controller_time,
+					    lo_message_controller_url )
+		    	values (:systimestamp,
+		    			:headers[message_test_id],
+		    			'event', 
+		    			:headers[message_service],
+		    			:headers[timestamp],
+		    			:eventUrlTime,
+    					:eventUrl)"
 		data-source="dataSource" channel="eventChannel"
 		sql-parameter-source-factory="spelSource" />
+		
+		
+<!-- 
+#################################################################
+		Spring Expression Setup for Dynmaically passing
+		SPEL's into our SQL statements. This is particularly helpful for accessing 
+		the MVC Controller Servlet Event payload to detemrine timings of Web services and AMQP processing times.
+######################################################################
+ -->
 
-	<bean id="spelSource"
+		
+
+		<bean id="spelSource"
 		      class="org.springframework.integration.jdbc.ExpressionEvaluatingSqlParameterSourceFactory">
 		    <property name="parameterExpressions">
 		        <map>
-		            <entry key="createdDate" value="T(java.lang.System).currentTimeMillis()" />
-		            <entry key="url" value="payload.getRequestUrl()" />
-		            <entry key="time" value="payload.getProcessingTimeMillis()" />
+		       
+		            <entry key="systimestamp" value="T(java.lang.System).currentTimeMillis()" />
+		            <entry key="eventUrlTime" value="payload.getProcessingTimeMillis()" />
+		            <entry key="eventUrl" value="payload.getRequestUrl()" />
 		            </map>
 		    </property>
 		</bean>
+		
+		
+<!--##############################################
+	 SET UP OF LOGGER FOR WebServices Implementation 
+	##############################################-->
 
 		<int-jdbc:outbound-channel-adapter
 		id="jdbc-WSoutboundChannelAdapter"
@@ -345,114 +311,70 @@
 			    lo_message_channel, 
 			    lo_message_service,
 			    lo_message_timestamp)
-    	values (:headers[timestamp],
+    	values (:systimestamp,    	
     			:headers[message_test_id],
     			:headers[message_source], 
-    			:headers[message_service], 
-    			:createdDate)"
-		data-source="dataSource" channel="output"
+    			:headers[message_service],
+    			:headers[timestamp])"    			
+    	data-source="dataSource" channel="webSevicesOutputChannel"
 		sql-parameter-source-factory="spelSource" />
+
+<!--##############################################
+	SET UP OF LOGGER FOR AMQP (which uses aggregator pattern) Implementation 
+	##############################################-->
 		
-		<int-jdbc:outbound-gateway
-		id="jdbc-OutboundGateway"
-		update="insert into lot_lu_loadtest_logger (
+		<int-jdbc:outbound-channel-adapter
+		id="jdbc-AMQPoutboundChannelAdapter"
+		query="insert into lot_lu_loadtest_logger (
 			    lo_message_start_time, 
 			    lo_message_test_id, 
 			    lo_message_channel, 
 			    lo_message_service,
 			    lo_message_timestamp)
-    	values (:headers[timestamp],
+    	values (:systimestamp,    	
     			:headers[message_test_id],
     			:headers[message_source], 
-    			:headers[message_service], 
-    			'test12')"
-		data-source="dataSource" 
-		request-channel="aggregateChannelOutput" 
-		/>
-		
+    			:headers[message_service],
+    			:headers[timestamp])"    			
+    	data-source="dataSource" channel="aggregateChannelOutput"
+		sql-parameter-source-factory="spelSource" />
 
-	<!-- ******************************* -->
-	<!-- Configure a SI outbound adpater to log each message time -->
-    
-<!-- *********************************** 
-		END  mySQL CONNECTION SETUP 
-	***********************************  --> 
+<!--##############################################
+	SET UP OF LOGGER FOR EACH OF THE AQMP ADAPTERS (which uses aggregator pattern) Implementation 
+	##############################################-->
+		<!-- 
+		<int-jdbc:outbound-gateway
+		id="jdbc-AMQPoutboundChannelAdapter"
+		update="insert into lot_lu_loadtest_logger (
+			    lo_message_test_id, 
+			    lo_message_channel, 
+			    lo_message_service,
+			    lo_message_timestamp)
+    	values (:headers[message_test_id],
+    			:headers[message_source], 
+    			:headers[message_service],
+    			:headers[timestamp])"    			
+    	data-source="dataSource" request-channel="fromVoucherWS" reply-channel="" />
 
-
-<!-- *********************************** 
-		SET OF Consoler Out Adapter for testing etc
-	*******************************  --> 
-		
-	
- <!-- *********************************** 
-		End of Console-Out Adapter for testing etc 
-	***********************************  --> 
-	
-	
-	<!-- *********************************** 
-		SETUP OF WEB SERIVCEC ADAPTERS THROUGH
-		SPRING INTEGRATION 
-	***********************************  --> 
- 
-	<!-- Setup of Web Service through Spring Integration -->
-	
-
-	<int:channel id="input" />
-	<int:channel id="output" />
-	
-	<!-- 
-	<int-stream:stdout-channel-adapter
-		id="consoleInput" 
-		channel="input" 
-		append-newline="true" 
-	/>
-	
-	<int-stream:stdout-channel-adapter
-		id="consoleOutPutEvent" 
-		channel="output" 
-		append-newline="true" 
-	/>
-	-->
-	
-	
-	
-	 
-
-<!--##############################################-->
-<!-- Request message routing to OpenEx. -->
-<!--##############################################-->
-<!--  ****** LOCAL CONFIG ***** -->
-<!--   
-	<int-ws:outbound-gateway id="marshallingGateway"
-		request-channel="input"
-		reply-channel="output" 
-		uri="http://localhost:8080/{message_service}/baskets" 
-		marshaller="marshaller"
-		unmarshaller="marshaller">
-		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
-	</int-ws:outbound-gateway>
  -->
-<!--  ****** Cloudfoundry Config CONFIG ***** -->
+ 
 
+<!--##############################################
+	 OUTBOUND WEBSERVICE ADAPTER SETUP 
+	##############################################-->
 
-<!--##############################################-->
-<!-- This si the seciotn message routing to OpenEx. -->
-<!--##############################################-->
-
-
-
-
+	<int:channel id="webSevicesInputChannel" />	
+	<int:channel id="webSevicesOutputChannel" />
 	<int-ws:outbound-gateway id="marshallingGateway"
-		request-channel="input"
-		reply-channel="output" 
+		request-channel="webSevicesInputChannel"
+		reply-channel="webSevicesOutputChannel" 
 		uri="http://{message_service}.cloudfoundry.com/{message_service}/baskets" 
 		marshaller="marshaller"
 		unmarshaller="marshaller"
 		>
-		<!--  Very useful feature in Spring Integraiton as it allows for the 
+		<!--  This following section shoudl be put in the final report as it is a 
+			very useful feature in Spring Integraiton as it allows for the 
 			interrogation of messages headers/payload using Spring Expression Language -->
 		<int-ws:uri-variable name="message_service" expression="headers.message_service"/>
 		</int-ws:outbound-gateway>
-		
-		
 </beans>

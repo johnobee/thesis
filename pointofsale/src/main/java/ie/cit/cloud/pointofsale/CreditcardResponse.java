@@ -5,7 +5,6 @@
 // Generated on: 2012.12.28 at 03:57:28 PM GMT 
 //
 
-
 package ie.cit.cloud.pointofsale;
 
 import java.math.BigDecimal;
@@ -15,11 +14,13 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
-
 /**
- * <p>Java class for anonymous complex type.
+ * <p>
+ * Java class for anonymous complex type.
  * 
- * <p>The following schema fragment specifies the expected content contained within this class.
+ * <p>
+ * The following schema fragment specifies the expected content contained within
+ * this class.
  * 
  * <pre>
  * &lt;complexType>
@@ -40,83 +41,74 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "CreditcardResponse")
 public class CreditcardResponse {
 
-    @XmlAttribute(name = "confirmationNumber")
-    protected String confirmationNumber;
-    @XmlAttribute(name = "creditcardNumber")
-    protected String creditcardNumber;
-    @XmlAttribute(name = "creditcardValue")
-    protected BigDecimal creditcardValue;
+	@XmlAttribute(name = "confirmationNumber")
+	protected String confirmationNumber;
+	@XmlAttribute(name = "creditcardNumber")
+	protected String creditcardNumber;
+	@XmlAttribute(name = "creditcardValue")
+	protected BigDecimal creditcardValue;
 
-    /**
-     * Gets the value of the confirmationNumber property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getConfirmationNumber() {
-        return confirmationNumber;
-    }
+	/**
+	 * Gets the value of the confirmationNumber property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getConfirmationNumber() {
+		return confirmationNumber;
+	}
 
-    /**
-     * Sets the value of the confirmationNumber property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setConfirmationNumber(String value) {
-        this.confirmationNumber = value;
-    }
+	/**
+	 * Sets the value of the confirmationNumber property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setConfirmationNumber(String value) {
+		this.confirmationNumber = value;
+	}
 
-    /**
-     * Gets the value of the creditcardNumber property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link String }
-     *     
-     */
-    public String getCreditcardNumber() {
-        return creditcardNumber;
-    }
+	/**
+	 * Gets the value of the creditcardNumber property.
+	 * 
+	 * @return possible object is {@link String }
+	 * 
+	 */
+	public String getCreditcardNumber() {
+		return creditcardNumber;
+	}
 
-    /**
-     * Sets the value of the creditcardNumber property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link String }
-     *     
-     */
-    public void setCreditcardNumber(String value) {
-        this.creditcardNumber = value;
-    }
+	/**
+	 * Sets the value of the creditcardNumber property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link String }
+	 * 
+	 */
+	public void setCreditcardNumber(String value) {
+		this.creditcardNumber = value;
+	}
 
-    /**
-     * Gets the value of the creditcardValue property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link BigDecimal }
-     *     
-     */
-    public BigDecimal getCreditcardValue() {
-        return creditcardValue;
-    }
+	/**
+	 * Gets the value of the creditcardValue property.
+	 * 
+	 * @return possible object is {@link BigDecimal }
+	 * 
+	 */
+	public BigDecimal getCreditcardValue() {
+		return creditcardValue;
+	}
 
-    /**
-     * Sets the value of the creditcardValue property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link BigDecimal }
-     *     
-     */
-    public void setCreditcardValue(BigDecimal value) {
-        this.creditcardValue = value;
-    }
+	/**
+	 * Sets the value of the creditcardValue property.
+	 * 
+	 * @param value
+	 *            allowed object is {@link BigDecimal }
+	 * 
+	 */
+	public void setCreditcardValue(BigDecimal value) {
+		this.creditcardValue = value;
+	}
 
 }
