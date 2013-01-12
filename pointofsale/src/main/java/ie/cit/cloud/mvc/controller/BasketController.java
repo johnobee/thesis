@@ -80,10 +80,10 @@ public class BasketController {
 
 		logger.debug("Received request to show all log entries");
 
-		// Retrieve all persons by delegating the call to PersonService
+		// Retrieve all logentries by delegating the call to LogEntryService
 		List<LogEntry> logentries = logEntryService.getAll();
 
-		// Attach persons to the Model
+		// Attach logentries to the Model
 		model.addObject("logentries", logentries);
 
 		// This will resolve to /WEB-INF/jsp/logpage.jsp
@@ -107,6 +107,7 @@ public class BasketController {
 		Message<String> message = MessageBuilder.withPayload(transactionBasket)
 				.setHeader("message_source", "AMQP")
 				.setHeader("message_service", "AMQP")
+				.setHeader("message_starttime", java.lang.System.currentTimeMillis())
 				.setHeader("message_test_id", testid)
 				.build();
 
@@ -116,33 +117,19 @@ public class BasketController {
 
 		tmpl.convertAndSend(toRabbit, message);
 		
-	
-		/*
-		 * // Create a new MessageProperties // Assign custom header and content
-		 * type MessageProperties properties = new MessageProperties();
-		 * properties.setHeader("keyword", "SALES");
-		 * properties.setContentType("text/plain");
-		 * 
-		 * I will use this Code pull back
-		 * 
-		 * template.setExchange("exchange"); template.setQueue("someQueue");
-		 * template.setRoutingKey("someQueue"); Message response =
-		 * template.sendAndReceive("exchange", "anotherQueue" , message);
-		 */
-
 		logger.info(message.getPayload().toString());
 		logger.info("************************************");
 		logger.info("BACK TO THE AMQP CONTROLLER");
 		logger.info("************************************");
-
 	}
-
+	
 	/*
 	 * WS Controller Elements
 	 */
 
 	/*
-	 * curl -X POST - H "Content-Type: text/xml" -d @salesTransactionRequest.xml http://localhost:8080/pointofsale/ws/1
+	 * curl -X POST - H "Content-Type: text/xml" -d @salesTransactionRequest.xml 
+	 * http://localhost:8080/pointofsale/ws/1
 	 */
 
 	@RequestMapping(value = "/ws/{testid}", method = RequestMethod.POST, headers = "Accept=text/xml, application/xml, text/plain")
@@ -155,6 +142,7 @@ public class BasketController {
 				.withPayload(transactionBasket)
 				.setHeader("message_source", "WS")
 				.setHeader("message_service", "loyalty")
+				.setHeader("message_starttime", java.lang.System.currentTimeMillis())
 				.setHeader("message_test_id", testid)
 				.build();
 
@@ -171,12 +159,14 @@ public class BasketController {
 		/*
 		 *  Send to CreditCard Web service
 		 *  
-		 */
+	*/
 
 		message = MessageBuilder.withPayload(transactionBasket)
 				.setHeader("message_source", "WS")
 				.setHeader("message_service", "creditcard")
-				.setHeader("message_test_id", testid).build();
+				.setHeader("message_starttime", java.lang.System.currentTimeMillis())
+				.setHeader("message_test_id", testid)
+				.build();
 
 		logger.info("************************************");
 		logger.info("ABOUT TO SEND TO CREDIT CARD WS FROM WS CONTROLLER");
@@ -189,15 +179,20 @@ public class BasketController {
 		logger.info("************************************");
 
 		
+		
+		
 		/*
 		 *  Send to Promtion Web service
 		 *  
+		 *  	 
 		 */
+		 
 		
 		
 		message = MessageBuilder.withPayload(transactionBasket)
 				.setHeader("message_source", "WS")
 				.setHeader("message_service", "promotion")
+				.setHeader("message_starttime", java.lang.System.currentTimeMillis())
 				.setHeader("message_test_id", testid).build();
 
 		logger.info("************************************");
@@ -211,29 +206,32 @@ public class BasketController {
 		logger.info("BACK TO THE WS CONTROLLER");
 		logger.info("************************************");
 
+	
+	
 		
 		/*
 		 *  Send to voucher Web service
-		 *  
 		 */
+		
 		
 		
 		message = MessageBuilder.withPayload(transactionBasket)
 				.setHeader("message_source", "WS")
 				.setHeader("message_service", "voucher")
+				.setHeader("message_starttime", java.lang.System.currentTimeMillis())
 				.setHeader("message_test_id", testid).build();
 
 		logger.info("************************************");
 		logger.info("ABOUT TO SEND VOUCHER FROM WS CONTROLLER");
 		logger.info("************************************");
 
-		// tmpl.convertAndSend(input, message);
+		tmpl.convertAndSend(input, message);
 		tmpl.convertAndSend(input, message);// (input, message);
 
 		logger.info("************************************");
-		logger.info("BACK TO THE WS CONTROLLER");
+		logger.info("BACK TO THE VOUCHER WS CONTROLLER");
 		logger.info("************************************");
-
+  
 		
 	}
 }

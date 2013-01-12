@@ -7,3 +7,4 @@
 
 @javax.xml.bind.annotation.XmlSchema(namespace = "http://cloud.cit.ie/pointofsale")
 package ie.cit.cloud.pointofsale;
+

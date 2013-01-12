@@ -1,0 +1,3 @@
+select distinct lo_message_test_id, lo_message_service from lot_lu_loadtest_logger
+
+truncate table lot_lu_loadtest_logger

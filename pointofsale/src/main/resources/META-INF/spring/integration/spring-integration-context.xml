@@ -42,7 +42,7 @@
 	<int-amqp:outbound-channel-adapter id="amqp-outbound-adapter" amqp-template="amqpTemplate"
 	exchange-name="epos.main.exchange.fanout" channel="toRabbit" 
 	routing-key="epos.main.exchange.fanout"
-	mapped-request-headers="message_*, __*, amqp_*" 
+	mapped-request-headers="message_*, __*, amqp_*"
 	/>
 	
 	<int:channel id="fromAMQP"/> 
@@ -95,40 +95,39 @@
 
 	Access messages from the Fanout Exchange using and AMQP inbound adapter
 	This message is then passed to the outbound LOYALTY WS adapter
+	
+	THis is simply replictated for each service attached to the exchange.
 	 -->
 
 	<int-amqp:inbound-channel-adapter id="fromRabbit_loyalty_adapter"
 	channel="fromRabbit_loyalty" 
 	queue-names="epos.loyalty" 
 	connection-factory="connectionFactory"  
-	mapped-request-headers="message_*, __*, amqp_*"	
+	mapped-request-headers="message_*, __*, amqp_*"
 	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
 	/>
-	<int:publish-subscribe-channel id="fromRabbit_loyalty"/>
-	<int-ws:outbound-gateway id="loyaltyGateway"
-		uri="http://loyalty.cloudfoundry.com/loyalty/baskets" marshaller="marshaller" unmarshaller="marshaller"
-		request-channel="fromRabbit_loyalty"
-		reply-channel="fromLoyaltyWS"
-		
-	/> 
-	<!-- Need to converter the object response from the Web Service Outbound adapter back 
-		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
-		from the original AMQP fan-out exhange headers and message conversion.
-	 -->
-	 
-	<int:channel id="fromLoyaltyWS" />
-	<int:object-to-json-transformer id="fromLoyaltyWSObjecttoJSON"
-	input-channel="fromLoyaltyWS" 
-	output-channel="aggregateChannel" />
-	
+		<int:publish-subscribe-channel id="fromRabbit_loyalty"/>
+		<int-ws:outbound-gateway id="loyaltyGateway"
+			uri="http://loyalty.cloudfoundry.com/loyalty/baskets" marshaller="marshaller" unmarshaller="marshaller"
+			request-channel="fromRabbit_loyalty"
+			reply-channel="fromLoyaltyWS"		
+		/> 
+			<!-- Need to converter the object response from the Web Service Outbound adapter back 
+				to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
+				from the original AMQP fan-out exhange headers and message conversion.
+				THis is repeated for each of the services attached to the exchange
+			 -->
+			 
+			<int:channel id="fromLoyaltyWS" />
+			<int:object-to-json-transformer id="fromLoyaltyWSObjecttoJSON"
+			input-channel="fromLoyaltyWS" 
+			output-channel="aggregateChannel" />
+			
 	
 
 		
-	<!-- 
-	Access messages from the Fanout Exchange using and AMQP inbound adapter
-	This message is then passed to the credit card outbound WS adapter
-	 -->
+	
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_creditcard_adapter"
 	channel="fromRabbit_creditcard"
@@ -138,81 +137,62 @@
 	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
 	/>
-	<int:channel id="fromRabbit_creditcard"/>
-	<int-ws:outbound-gateway id="creditcardGateway"
-		uri="http://creditcard.cloudfoundry.com/creditcard/baskets" marshaller="marshaller" 
-		request-channel="fromRabbit_creditcard"
-		reply-channel="fromCreditcardWS" 
-	/> 
-	<!-- Need to converter the object response from the Web Service Outbound adapter back 
-		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
-		from the original AMQP fan-out exchange headers and message conversion.
-	 -->
-	<int:channel id="fromCreditcardWS" />
-	<int:object-to-json-transformer id="fromCreditCardWSObjecttoJSON"
-	input-channel="fromCreditcardWS" 
-	output-channel="aggregateChannel" />
+			<int:channel id="fromRabbit_creditcard"/>
+			<int-ws:outbound-gateway id="creditcardGateway"
+				uri="http://creditcard.cloudfoundry.com/creditcard/baskets" marshaller="marshaller" 
+				request-channel="fromRabbit_creditcard"
+				reply-channel="fromCreditcardWS" 
+			/> 
+
+				<int:channel id="fromCreditcardWS" />
+				<int:object-to-json-transformer id="fromCreditCardWSObjecttoJSON"
+				input-channel="fromCreditcardWS" 
+				output-channel="aggregateChannel" />
 	
-	<!-- 
-	Access messages from the Fanout Exchange using and AMQP inbound adapter
-	This message is then passed to the outbound WS adapter
-	 -->
-	 
+	
 	  
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_promotion_adapter"
 	channel="fromRabbit_promotion"
 	queue-names="epos.promotion" 
 	connection-factory="connectionFactory"  
-	mapped-request-headers="message_*, __*, amqp_*"	
+	mapped-request-headers="message_*, __*, amqp_*"
 	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
 	/>
-	<int:channel id="fromRabbit_promotion"/>
-	<int-ws:outbound-gateway id="promotionGateway"
-		uri="http://promotion.cloudfoundry.com/promotion/baskets" marshaller="marshaller" unmarshaller="marshaller"
-		request-channel="fromRabbit_promotion"
-		reply-channel="fromPromotionWS" 
-	/> 
-	<!-- Need to converter the object response from the Web Service Outbound adapter back 
-		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
-		from the original AMQP fan-out exchange headers and message conversion.
-	 -->
-			<int:channel id="fromPromotionWS" />
-			<int:object-to-json-transformer id="fromPromotionWSObjecttoJSON"
-			input-channel="fromPromotionWS" 
-			output-channel="aggregateChannel" />
+			<int:channel id="fromRabbit_promotion"/>
+			<int-ws:outbound-gateway id="promotionGateway"
+				uri="http://promotion.cloudfoundry.com/promotion/baskets" marshaller="marshaller" unmarshaller="marshaller"
+				request-channel="fromRabbit_promotion"
+				reply-channel="fromPromotionWS" 
+			/> 
 	
-		<!-- 
-	Access messages from the Fanout Exchange using and AMQP inbound adapter
-	This message is then passed to the outbound WS adapter
-		<int:channel id="fromRabbit.epos.voucher"/>
-		
-	 -->
-
+					<int:channel id="fromPromotionWS" />
+					<int:object-to-json-transformer id="fromPromotionWSObjecttoJSON"
+					input-channel="fromPromotionWS" 
+					output-channel="aggregateChannel" />
+	
+ 
 	<int-amqp:inbound-channel-adapter 
 	id="fromRabbit_voucher_adapter"
 	channel="fromRabbit_voucher"
 	queue-names="epos.voucher" 
 	connection-factory="connectionFactory"  
-	mapped-request-headers="message_*, __*, amqp_*"	
+	mapped-request-headers="message_*, __*, amqp_*"
 	message-converter="marshallingMessageConverter"
 	error-channel="eventErrorChannel"
 	/>
-	<int:channel id="fromRabbit_voucher"/>
-	<int-ws:outbound-gateway id="voucherGateway"
-		uri="http://voucher.cloudfoundry.com/voucher/baskets" marshaller="marshaller" unmarshaller="marshaller"
-		request-channel="fromRabbit_voucher"
-		reply-channel="fromVoucherWS" 
-	/> 
-	<!-- Need to converter the object response from the Web Service Outbound adapter back 
-		to a json message as we will be handing it onto the Aggregator pattern which is expect a text/plain object 
-		from the original AMQP fan-out exchange headers and message conversion.
-	 -->
-			<int:publish-subscribe-channel id="fromVoucherWS" />
-			<int:object-to-json-transformer id="fromVoucherWSObjecttoJSON"
-			input-channel="fromVoucherWS" 
-			output-channel="aggregateChannel" />
+			<int:channel id="fromRabbit_voucher"/>
+			<int-ws:outbound-gateway id="voucherGateway"
+				uri="http://voucher.cloudfoundry.com/voucher/baskets" 
+				marshaller="marshaller" unmarshaller="marshaller"
+				request-channel="fromRabbit_voucher"
+				reply-channel="fromVoucherWS" 
+			/> 
+					<int:publish-subscribe-channel id="fromVoucherWS" />
+					<int:object-to-json-transformer id="fromVoucherWSObjecttoJSON"
+					input-channel="fromVoucherWS" 
+					output-channel="aggregateChannel" />
 	
 	
 <!--##############################################
@@ -225,8 +205,9 @@
 		  release-strategy-expression="size() == 4"
 		  correlation-strategy-expression="headers['amqp_receivedRoutingKey']"
 		  send-partial-result-on-expiry="false"
-		  discard-channel="aggregateChannelOutput" 
+		  discard-channel="eventErrorChannel" 
 		  send-timeout="2000"
+		  expire-groups-upon-completion="true"
 		 />
 		 
 		 <!-- Simple call to outbound JDBC adapter to log the point at which all WebServices are
@@ -255,9 +236,10 @@
 		append-newline="true" 
 	 />
 
-	<int-jdbc:outbound-channel-adapter
-		id="jdbc-EventoutboundChannelAdapter"
-		query="insert into lot_lu_loadtest_logger (
+	 <int-jdbc:outbound-channel-adapter
+	 	id="jdbc-EventoutboundChannelAdapter"
+	 	query="insert into lot_lu_loadtest_logger (
+				     	lo_db_create_time,
 				     	lo_message_start_time, 
 					    lo_message_test_id, 
 					    lo_message_channel, 
@@ -265,18 +247,19 @@
 					    lo_message_timestamp,
 					    lo_message_controller_time,
 					    lo_message_controller_url )
-		    	values (:systimestamp,
+		    	values (EXTRACT(EPOCH FROM date_trunc('milliseconds', statement_timestamp()) AT TIME ZONE 'UTC') * 1000,
+		    			:headers[message_starttime],
 		    			:headers[message_test_id],
 		    			'event', 
 		    			:headers[message_service],
 		    			:headers[timestamp],
 		    			:eventUrlTime,
     					:eventUrl)"
-		data-source="dataSource" channel="eventChannel"
-		sql-parameter-source-factory="spelSource" />
-		
-		
-<!-- 
+	 	data-source="dataSource" channel="eventChannel"
+	 	sql-parameter-source-factory="spelSource" />
+
+
+	 <!-- 
 #################################################################
 		Spring Expression Setup for Dynmaically passing
 		SPEL's into our SQL statements. This is particularly helpful for accessing 
@@ -304,43 +287,50 @@
 	##############################################-->
 
 		<int-jdbc:outbound-channel-adapter
-		id="jdbc-WSoutboundChannelAdapter"
-		query="insert into lot_lu_loadtest_logger (
-			    lo_message_start_time, 
+			id="jdbc-WSoutboundChannelAdapter"
+			query="insert into lot_lu_loadtest_logger (
+			    lo_db_create_time,
+				lo_message_start_time,  
 			    lo_message_test_id, 
 			    lo_message_channel, 
 			    lo_message_service,
 			    lo_message_timestamp)
-    	values (:systimestamp,    	
+    	values  (EXTRACT(EPOCH FROM date_trunc('milliseconds', statement_timestamp()) AT TIME ZONE 'UTC') * 1000,
+		    	:headers[message_starttime],    	
     			:headers[message_test_id],
     			:headers[message_source], 
     			:headers[message_service],
-    			:headers[timestamp])"    			
-    	data-source="dataSource" channel="webSevicesOutputChannel"
-		sql-parameter-source-factory="spelSource" />
+    			:headers[timestamp])"
+			data-source="dataSource" channel="webSevicesOutputChannel"
+			sql-parameter-source-factory="spelSource" />
 
-<!--##############################################
+		<!--##############################################
 	SET UP OF LOGGER FOR AMQP (which uses aggregator pattern) Implementation 
 	##############################################-->
 		
 		<int-jdbc:outbound-channel-adapter
-		id="jdbc-AMQPoutboundChannelAdapter"
-		query="insert into lot_lu_loadtest_logger (
+			id="jdbc-AMQPoutboundChannelAdapter"
+			query="insert into lot_lu_loadtest_logger (
+			    lo_db_create_time,
 			    lo_message_start_time, 
 			    lo_message_test_id, 
 			    lo_message_channel, 
 			    lo_message_service,
 			    lo_message_timestamp)
-    	values (:systimestamp,    	
+    	values (EXTRACT(EPOCH FROM date_trunc('milliseconds', statement_timestamp()) AT TIME ZONE 'UTC') * 1000,
+		    	:headers[message_starttime],    	
     			:headers[message_test_id],
     			:headers[message_source], 
     			:headers[message_service],
-    			:headers[timestamp])"    			
-    	data-source="dataSource" channel="aggregateChannelOutput"
-		sql-parameter-source-factory="spelSource" />
+    			:headers[timestamp])"
+			data-source="dataSource" channel="aggregateChannelOutput"
+			sql-parameter-source-factory="spelSource" />
 
-<!--##############################################
-	SET UP OF LOGGER FOR EACH OF THE AQMP ADAPTERS (which uses aggregator pattern) Implementation 
+		<!--##############################################
+	FUTURE WORK
+	
+	COULD SET UP LOGGING HERE FOR EACH OF THE AQMP ADAPTERS 
+	(which uses aggregator pattern) Implementation 
 	##############################################-->
 		<!-- 
 		<int-jdbc:outbound-gateway
